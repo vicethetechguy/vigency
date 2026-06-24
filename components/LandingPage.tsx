@@ -139,7 +139,7 @@ function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-yellow" />
             </span>
-            Limited access · June release
+            Limited access · June promo
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
@@ -173,13 +173,15 @@ function Hero() {
             <motion.a
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
-              href="#transformation"
+              href="https://chat.whatsapp.com/FE1MVRwyBZf2zyQucuEkf1"
+              target="_blank"
+              rel="noopener noreferrer"
               className="glass inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 font-display text-sm font-bold sm:w-auto"
             >
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-white text-[10px] text-black">
-                ▶
+              <span className="grid h-7 w-7 place-items-center rounded-full bg-[#25D366] text-xs text-white">
+                ↗
               </span>
-              Watch Preview
+              Join our Zero Club
             </motion.a>
           </motion.div>
           <motion.div
@@ -303,78 +305,251 @@ function Inside() {
 }
 
 function Transformation() {
+  const [phase, setPhase] = useState<"input" | "processing" | "output">("input");
+  const [processingStep, setProcessingStep] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const hasEngaged = useRef(false);
+  const previousOverflow = useRef({ body: "", html: "" });
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || phase !== "input") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting || hasEngaged.current) return;
+        hasEngaged.current = true;
+        section.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        window.setTimeout(() => {
+          previousOverflow.current = {
+            body: document.body.style.overflow,
+            html: document.documentElement.style.overflow,
+          };
+          document.body.style.overflow = "hidden";
+          document.documentElement.style.overflow = "hidden";
+        }, 450);
+      },
+      { threshold: 0.68 },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "processing") return;
+
+    setProcessingStep(0);
+    const analyzeTimer = window.setTimeout(() => setProcessingStep(1), 1500);
+    const renderTimer = window.setTimeout(() => setProcessingStep(2), 3200);
+    const outputTimer = window.setTimeout(() => setPhase("output"), 5000);
+
+    return () => {
+      window.clearTimeout(analyzeTimer);
+      window.clearTimeout(renderTimer);
+      window.clearTimeout(outputTimer);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase !== "output") return;
+    document.body.style.overflow = previousOverflow.current.body;
+    document.documentElement.style.overflow = previousOverflow.current.html;
+  }, [phase]);
+
+  useEffect(
+    () => () => {
+      document.body.style.overflow = previousOverflow.current.body;
+      document.documentElement.style.overflow = previousOverflow.current.html;
+    },
+    [],
+  );
+
+  const processingMessages = [
+    "Understanding your creative direction",
+    "Applying the reference framework",
+    "Rendering your final design",
+  ];
+
   return (
-    <section id="transformation" className="section-pad relative">
+    <section ref={sectionRef} id="transformation" className="section-pad relative min-h-screen">
       <div className="absolute left-1/2 top-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink/10 blur-[160px]" />
       <div className="container-shell">
         <SectionIntro
           eyebrow="Live transformation"
           title={<>From idea <span className="text-white/25">→</span> final design.</>}
-          description="The system handles the gap between what is in your head and what the AI needs to hear."
+          description={
+            phase === "output"
+              ? "Demo complete. Your idea has been transformed into a campaign-ready visual."
+              : "Try the guided demo to experience how the system transforms an idea into a finished design."
+          }
         />
-        <div className="grid items-stretch gap-3 lg:grid-cols-[1fr_0.8fr_1.15fr]">
-          <Reveal>
-            <div className="flex h-full min-h-[340px] flex-col rounded-[30px] border border-white/10 bg-[#0d0d0d] p-6">
-              <div className="flex items-center justify-between">
-                <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">01 · Input</p>
-                <div className="flex gap-1"><i className="h-2 w-2 rounded-full bg-red-400/70" /><i className="h-2 w-2 rounded-full bg-yellow/70" /><i className="h-2 w-2 rounded-full bg-green-400/70" /></div>
-              </div>
-              <div className="my-auto rounded-2xl border border-white/10 bg-white/[0.035] p-5">
-                <p className="text-xs font-semibold text-white/35">Describe your idea</p>
-                <p className="mt-4 font-display text-xl font-bold leading-7">
-                  “Create a bold flyer for my fintech startup.”
-                  <motion.span
-                    animate={{ opacity: [1, 0, 1] }}
-                    transition={{ duration: 0.9, repeat: Infinity }}
-                    className="ml-1 inline-block h-5 w-[2px] bg-yellow align-middle"
-                  />
+        <div className="mx-auto max-w-3xl">
+          <div className="mb-4 flex items-center justify-center gap-2">
+            {["Input", "AI Process", "Output"].map((label, index) => {
+              const currentIndex =
+                phase === "input" ? 0 : phase === "processing" ? 1 : 2;
+              return (
+                <div key={label} className="flex items-center gap-2">
+                  <div
+                    className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[8px] font-bold uppercase tracking-[0.16em] transition-all duration-500 ${
+                      index === currentIndex
+                        ? "border-yellow/40 bg-yellow/10 text-yellow"
+                        : index < currentIndex
+                          ? "border-white/10 bg-white/[0.04] text-white/55"
+                          : "border-white/[0.06] text-white/20"
+                    }`}
+                  >
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <span className="hidden sm:inline">{label}</span>
+                  </div>
+                  {index < 2 && <span className="h-px w-5 bg-white/10 sm:w-10" />}
+                </div>
+              );
+            })}
+          </div>
+
+          <AnimatePresence mode="wait">
+            {phase === "input" && (
+              <motion.div
+                key="input"
+                initial={{ opacity: 0, y: 24, scale: 0.98 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -50, scale: 0.97 }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="display-card flex min-h-[390px] flex-col rounded-[30px] border border-white/10 bg-[#0d0d0d] p-6 md:min-h-[430px] md:p-8"
+              >
+                <div className="flex items-center justify-between">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                    01 · Input
+                  </p>
+                  <div className="flex gap-1">
+                    <i className="h-2 w-2 rounded-full bg-red-400/70" />
+                    <i className="h-2 w-2 rounded-full bg-yellow/70" />
+                    <i className="h-2 w-2 rounded-full bg-green-400/70" />
+                  </div>
+                </div>
+                <div className="my-auto rounded-[22px] border border-white/10 bg-white/[0.035] p-5 md:p-7">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold text-white/35">Describe your idea</p>
+                    <span className="rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider text-white/25">
+                      Demo prompt
+                    </span>
+                  </div>
+                  <p className="mt-5 font-display text-2xl font-bold leading-8 md:text-3xl md:leading-10">
+                    “Create a bold flyer for my fintech startup.”
+                    <motion.span
+                      animate={{ opacity: [1, 0, 1] }}
+                      transition={{ duration: 0.9, repeat: Infinity }}
+                      className="ml-1 inline-block h-6 w-[2px] bg-yellow align-middle"
+                    />
+                  </p>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-[10px] font-semibold text-white/35">
+                    Click the Run button to continue
+                  </p>
+                  <motion.button
+                    type="button"
+                    onClick={() => setPhase("processing")}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.97 }}
+                    className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[linear-gradient(135deg,#F9C80E,#FF6A2A_48%,#E91EAE)] px-6 font-display text-xs font-bold shadow-[0_12px_40px_rgba(233,30,174,.25)]"
+                  >
+                    Run <span>→</span>
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+
+            {phase === "processing" && (
+              <motion.div
+                key="processing"
+                initial={{ opacity: 0, x: 50, scale: 0.97 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
+                exit={{ opacity: 0, x: -50, scale: 0.97 }}
+                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                className="display-card relative flex min-h-[430px] flex-col items-center justify-center overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0d0d] p-7 text-center"
+              >
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(233,30,174,.12),transparent_52%)]" />
+                <p className="absolute left-6 top-6 text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
+                  02 · AI Process
                 </p>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-semibold text-white/35">
-                <span className="grid h-8 w-8 place-items-center rounded-lg border border-white/10">＋</span>
-                Add visual reference
-              </div>
-            </div>
-          </Reveal>
-          <Reveal delay={0.1}>
-            <div className="relative flex h-full min-h-[340px] flex-col items-center justify-center overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.025] p-6 text-center">
-              <p className="absolute left-6 top-6 text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">02 · AI process</p>
-              <div className="relative grid h-28 w-28 place-items-center">
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full border border-dashed border-pink/60"
-                />
-                <motion.div
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 7, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-4 rounded-full border border-dashed border-yellow/60"
-                />
-                <span className="gradient-text font-display text-3xl font-black">V</span>
-              </div>
-              <p className="mt-7 font-display text-sm font-bold">Structuring your direction</p>
-              <div className="mt-3 flex gap-1">
-                {[0, 1, 2, 3].map((i) => (
-                  <motion.i
-                    key={i}
-                    animate={{ opacity: [0.2, 1, 0.2] }}
-                    transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.18 }}
-                    className="h-1 w-6 rounded-full bg-gradient-to-r from-yellow to-pink"
+                <div className="relative grid h-32 w-32 place-items-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 rounded-full border border-dashed border-pink/70"
                   />
-                ))}
-              </div>
-            </div>
-          </Reveal>
-          <Reveal delay={0.2}>
-            <div className="relative min-h-[500px] overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0d0d] p-3 lg:min-h-[340px]">
-              <p className="absolute left-6 top-6 z-20 rounded-full bg-black/55 px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.18em] backdrop-blur-md">03 · Output</p>
-              <ArtworkCard
-                src="/assets/showcase-gexipay.png"
-                alt="Gexipay fintech promotional flyer"
-                className="h-full min-h-[470px] !aspect-auto !rounded-[22px] lg:min-h-[316px]"
-              />
-            </div>
-          </Reveal>
+                  <motion.div
+                    animate={{ rotate: -360 }}
+                    transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-4 rounded-full border border-dashed border-yellow/70"
+                  />
+                  <motion.div
+                    animate={{ scale: [0.9, 1.08, 0.9] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    className="grid h-16 w-16 place-items-center rounded-full bg-white/[0.055] shadow-[0_0_45px_rgba(233,30,174,.25)]"
+                  >
+                    <span className="gradient-text font-display text-3xl font-black">V</span>
+                  </motion.div>
+                </div>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={processingStep}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="relative mt-8 font-display text-base font-bold"
+                  >
+                    {processingMessages[processingStep]}
+                  </motion.p>
+                </AnimatePresence>
+                <div className="relative mt-6 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-white/[0.06]">
+                  <motion.div
+                    initial={{ width: "0%" }}
+                    animate={{ width: "100%" }}
+                    transition={{ duration: 5, ease: "linear" }}
+                    className="h-full rounded-full bg-gradient-to-r from-yellow via-orange to-pink"
+                  />
+                </div>
+                <p className="relative mt-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/30">
+                  Generating your visual · Please wait
+                </p>
+              </motion.div>
+            )}
+
+            {phase === "output" && (
+              <motion.div
+                key="output"
+                initial={{ opacity: 0, y: 36, scale: 0.9, filter: "blur(14px)" }}
+                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                className="display-card relative mx-auto max-w-[520px] overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0d0d] p-3"
+              >
+                <div className="absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full bg-black/65 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.16em] backdrop-blur-md">
+                  <span className="h-2 w-2 rounded-full bg-green-400" />
+                  03 · Output ready
+                </div>
+                <ArtworkCard
+                  src="/assets/showcase-gexipay.png"
+                  alt="Gexipay fintech promotional flyer"
+                  className="!rounded-[22px]"
+                  priority
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.p
+            animate={{ opacity: phase === "output" ? 1 : 0.45 }}
+            className="mt-5 text-center text-[9px] font-bold uppercase tracking-[0.2em] text-white/35"
+          >
+            {phase === "output"
+              ? "Experience complete · Continue scrolling"
+              : "Complete this guided experience to continue"}
+          </motion.p>
         </div>
       </div>
     </section>
