@@ -111,7 +111,7 @@ function Navigation() {
         </a>
         <div className="hidden items-center gap-7 text-xs font-semibold text-white/55 lg:flex">
           <a className="transition-colors hover:text-white" href="#inside">Inside</a>
-          <a className="transition-colors hover:text-white" href="#examples">Examples</a>
+          <a className="transition-colors hover:text-white" href="#examples">Samples</a>
           <a className="transition-colors hover:text-white" href="#faq">FAQ</a>
         </div>
         <CtaButton className="min-h-10 px-4 text-xs md:min-h-11 md:px-5" href="#offer">
@@ -123,8 +123,30 @@ function Navigation() {
 }
 
 function Hero() {
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress: heroScroll } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroGradientPosition = useTransform(
+    heroScroll,
+    [0, 0.72],
+    ["68%", "32%"],
+  );
+  const travelingGlowY = useTransform(
+    heroScroll,
+    [0, 0.5, 1],
+    ["4%", "48%", "92%"],
+  );
+
+  const headingLines = ["CREATE", "ANY TYPE OF", "GRAPHIC DESIGN"];
+
   return (
-    <section id="top" className="relative min-h-screen overflow-hidden pb-20 pt-32 md:pt-40">
+    <section
+      ref={heroRef}
+      id="top"
+      className="relative min-h-screen overflow-hidden pb-20 pt-32 md:pt-40"
+    >
       <div className="absolute left-[-12%] top-24 -z-10 h-[440px] w-[440px] rounded-full bg-purple/15 blur-[130px]" />
       <div className="absolute right-[-8%] top-40 -z-10 h-[520px] w-[520px] rounded-full bg-pink/15 blur-[150px]" />
       <div className="container-shell">
@@ -145,13 +167,44 @@ function Hero() {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="font-display text-[clamp(3.25rem,10.5vw,8.4rem)] font-extrabold leading-[0.87] tracking-[-0.075em]"
+            className="group font-display text-[clamp(3.25rem,10.5vw,8.4rem)] font-extrabold leading-[0.87] tracking-[-0.075em]"
           >
-            CREATE ANY TYPE OF{" "}
-            <span className="gradient-text animated-gradient inline-block">
-              GRAPHIC DESIGN
+            <span className="relative block">
+              <span className="relative z-10 block text-white/90">
+                {headingLines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </span>
+              <motion.span
+                aria-hidden="true"
+                style={{ backgroundPositionY: heroGradientPosition }}
+                className="pointer-events-none absolute inset-0 z-20 block bg-[linear-gradient(to_bottom,transparent_0%,transparent_29%,#F9C80E_40%,#FF6A2A_50%,#E91EAE_60%,transparent_71%,transparent_100%)] bg-[length:100%_300%] bg-clip-text text-transparent"
+              >
+                {headingLines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </motion.span>
+              <span
+                aria-hidden="true"
+                className="hero-heading-hover pointer-events-none absolute inset-0 z-30 block bg-[linear-gradient(110deg,#F9C80E_0%,#FF6A2A_25%,#E91EAE_50%,#B05CFF_72%,#F9C80E_100%)] bg-[length:250%_100%] bg-clip-text text-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              >
+                {headingLines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </span>
             </span>
           </motion.h1>
+          <motion.div
+            aria-hidden="true"
+            style={{ top: travelingGlowY }}
+            className="pointer-events-none absolute left-1/2 -z-10 h-32 w-[72%] -translate-x-1/2 rounded-full bg-[linear-gradient(90deg,rgba(249,200,14,.28),rgba(233,30,174,.25))] blur-[75px]"
+          />
           <motion.p
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -178,8 +231,14 @@ function Hero() {
               rel="noopener noreferrer"
               className="glass inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full px-6 font-display text-sm font-bold sm:w-auto"
             >
-              <span className="grid h-7 w-7 place-items-center rounded-full bg-[#25D366] text-xs text-white">
-                ↗
+              <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full">
+                <Image
+                  src="/assets/zero-club-icon.png"
+                  alt=""
+                  fill
+                  sizes="28px"
+                  className="object-contain"
+                />
               </span>
               Join our Zero Club
             </motion.a>
@@ -309,7 +368,11 @@ function Transformation() {
   const [processingStep, setProcessingStep] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
   const hasEngaged = useRef(false);
-  const previousOverflow = useRef({ body: "", html: "" });
+  const completedOnce = useRef(false);
+  const replayArmed = useRef(false);
+  const replayInProgress = useRef(false);
+  const lastScrollY = useRef(0);
+  const replayTimers = useRef<number[]>([]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -320,17 +383,8 @@ function Transformation() {
         if (!entry.isIntersecting || hasEngaged.current) return;
         hasEngaged.current = true;
         section.scrollIntoView({ behavior: "smooth", block: "center" });
-
-        window.setTimeout(() => {
-          previousOverflow.current = {
-            body: document.body.style.overflow,
-            html: document.documentElement.style.overflow,
-          };
-          document.body.style.overflow = "hidden";
-          document.documentElement.style.overflow = "hidden";
-        }, 450);
       },
-      { threshold: 0.68 },
+      { threshold: 0.35 },
     );
 
     observer.observe(section);
@@ -354,14 +408,109 @@ function Transformation() {
 
   useEffect(() => {
     if (phase !== "output") return;
-    document.body.style.overflow = previousOverflow.current.body;
-    document.documentElement.style.overflow = previousOverflow.current.html;
+    completedOnce.current = true;
+    replayInProgress.current = false;
+  }, [phase]);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || phase === "output") return;
+
+    const isDemoActive = () => {
+      const rect = section.getBoundingClientRect();
+      return (
+        rect.top < window.innerHeight * 0.74 &&
+        rect.bottom > window.innerHeight * 0.26
+      );
+    };
+
+    let touchStartY = 0;
+
+    const handleWheel = (event: WheelEvent) => {
+      if (event.deltaY > 0 && isDemoActive()) event.preventDefault();
+    };
+
+    const handleTouchStart = (event: TouchEvent) => {
+      touchStartY = event.touches[0]?.clientY ?? 0;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      const currentY = event.touches[0]?.clientY ?? touchStartY;
+      const movingDownPage = currentY < touchStartY;
+      if (movingDownPage && isDemoActive()) event.preventDefault();
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const movesDown =
+        event.key === "ArrowDown" ||
+        event.key === "PageDown" ||
+        event.key === "End" ||
+        (event.key === " " && !event.shiftKey);
+      if (movesDown && isDemoActive()) event.preventDefault();
+    };
+
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [phase]);
+
+  useEffect(() => {
+    lastScrollY.current = window.scrollY;
+
+    const handleScroll = () => {
+      const section = sectionRef.current;
+      if (!section || !completedOnce.current) {
+        lastScrollY.current = window.scrollY;
+        return;
+      }
+
+      const rect = section.getBoundingClientRect();
+      const scrollingDown = window.scrollY > lastScrollY.current;
+
+      if (rect.top > window.innerHeight) {
+        replayArmed.current = true;
+      }
+
+      const hasReturnedToDemo =
+        scrollingDown &&
+        replayArmed.current &&
+        !replayInProgress.current &&
+        phase === "output" &&
+        rect.top < window.innerHeight * 0.72 &&
+        rect.bottom > window.innerHeight * 0.28;
+
+      if (hasReturnedToDemo) {
+        replayArmed.current = false;
+        replayInProgress.current = true;
+        section.scrollIntoView({ behavior: "smooth", block: "center" });
+        setPhase("input");
+        setProcessingStep(0);
+
+        const replayTimer = window.setTimeout(() => {
+          setPhase("processing");
+        }, 1200);
+
+        replayTimers.current = [replayTimer];
+      }
+
+      lastScrollY.current = window.scrollY;
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [phase]);
 
   useEffect(
     () => () => {
-      document.body.style.overflow = previousOverflow.current.body;
-      document.documentElement.style.overflow = previousOverflow.current.html;
+      replayTimers.current.forEach((timer) => window.clearTimeout(timer));
     },
     [],
   );

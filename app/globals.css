@@ -136,6 +136,19 @@ a {
   }
 }
 
+.group:hover .hero-heading-hover {
+  animation: hero-heading-sweep 2.4s linear infinite;
+}
+
+@keyframes hero-heading-sweep {
+  from {
+    background-position: 0% 50%;
+  }
+  to {
+    background-position: 250% 50%;
+  }
+}
+
 @media (max-width: 768px) {
   .container-shell {
     width: min(100% - 24px, 1180px);
