@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { Countdown } from "./Countdown";
 import {
   ArrowIcon,
@@ -11,7 +12,6 @@ import {
   Logo,
   Reveal,
   SectionIntro,
-  checkoutUrl,
 } from "./ui";
 
 const benefits = [
@@ -871,13 +871,225 @@ function Story() {
   );
 }
 
+function AccessFormModal({
+  open,
+  close,
+}: {
+  open: boolean;
+  close: () => void;
+}) {
+  const [checkoutError, setCheckoutError] = useState("");
+  const [isStartingCheckout, setIsStartingCheckout] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") close();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open, close]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setCheckoutError("");
+    setIsStartingCheckout(true);
+
+    const formData = new FormData(event.currentTarget);
+    const customer = {
+      fullName: String(formData.get("fullName") || ""),
+      email: String(formData.get("email") || ""),
+      whatsapp: String(formData.get("whatsapp") || ""),
+      whatsappConsent: formData.get("whatsappConsent") === "on",
+    };
+
+    try {
+      const response = await fetch("/api/paystack/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(customer),
+      });
+      const result = (await response.json()) as {
+        authorizationUrl?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !result.authorizationUrl) {
+        throw new Error(result.error || "Could not start secure checkout.");
+      }
+
+      window.location.assign(result.authorizationUrl);
+    } catch (error) {
+      setCheckoutError(
+        error instanceof Error
+          ? error.message
+          : "Could not start secure checkout.",
+      );
+      setIsStartingCheckout(false);
+    }
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={close}
+          className="fixed inset-0 z-[85] grid place-items-center overflow-y-auto bg-black/85 p-4 backdrop-blur-xl"
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="access-form-title"
+            initial={{ opacity: 0, y: 30, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.97 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(event) => event.stopPropagation()}
+            className="gradient-border relative my-auto w-full max-w-lg overflow-hidden rounded-[32px] p-6 shadow-[0_35px_130px_rgba(233,30,174,.24)] md:p-9"
+          >
+            <div className="absolute -right-20 -top-20 h-56 w-56 rounded-full bg-pink/20 blur-[80px]" />
+            <div className="absolute -bottom-24 -left-20 h-56 w-56 rounded-full bg-yellow/10 blur-[80px]" />
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close access form"
+              className="absolute right-4 top-4 z-10 grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/[0.045] text-xl text-white/50 transition-colors hover:text-white"
+            >
+              ×
+            </button>
+
+            <div className="relative">
+              <div className="mb-6 flex h-12 w-[138px] items-center overflow-hidden rounded-2xl border border-white/10 bg-black/35 px-2">
+                <Logo className="h-9 w-[120px]" />
+              </div>
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-yellow">
+                Secure your access
+              </p>
+              <h3
+                id="access-form-title"
+                className="mt-3 max-w-sm font-display text-3xl font-bold leading-[1.05] tracking-[-0.045em] md:text-4xl"
+              >
+                You’re one step away.
+              </h3>
+              <p className="mt-3 text-sm leading-6 text-white/50">
+                Enter your details below to continue to the secure ₦10,000 checkout.
+              </p>
+
+              <form onSubmit={handleSubmit} className="mt-7 space-y-4">
+                <label className="block">
+                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
+                    Full Name
+                  </span>
+                  <input
+                    name="fullName"
+                    type="text"
+                    autoComplete="name"
+                    required
+                    placeholder="Enter your full name"
+                    className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.045] px-4 text-sm font-medium text-white outline-none transition placeholder:text-white/25 focus:border-yellow/50 focus:bg-white/[0.065] focus:ring-4 focus:ring-yellow/[0.06]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
+                    Email Address
+                  </span>
+                  <input
+                    name="email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    required
+                    placeholder="you@example.com"
+                    className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.045] px-4 text-sm font-medium text-white outline-none transition placeholder:text-white/25 focus:border-yellow/50 focus:bg-white/[0.065] focus:ring-4 focus:ring-yellow/[0.06]"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/40">
+                    WhatsApp Number
+                  </span>
+                  <input
+                    name="whatsapp"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="tel"
+                    required
+                    pattern="[+0-9 ()-]{7,20}"
+                    placeholder="+234 800 000 0000"
+                    className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.045] px-4 text-sm font-medium text-white outline-none transition placeholder:text-white/25 focus:border-yellow/50 focus:bg-white/[0.065] focus:ring-4 focus:ring-yellow/[0.06]"
+                  />
+                </label>
+
+                <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4">
+                  <input
+                    name="whatsappConsent"
+                    type="checkbox"
+                    required
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-yellow"
+                  />
+                  <span className="text-[10px] leading-5 text-white/45">
+                    I agree to receive my purchase confirmation, access details,
+                    promo code, and relevant Vigency or Zero Club offers on
+                    WhatsApp. I can opt out later.
+                  </span>
+                </label>
+
+                {checkoutError && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    role="alert"
+                    className="rounded-xl border border-orange/20 bg-orange/10 px-4 py-3 text-xs leading-5 text-orange"
+                  >
+                    {checkoutError}
+                  </motion.p>
+                )}
+
+                <motion.button
+                  type="submit"
+                  disabled={isStartingCheckout}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="mt-2 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#F9C80E_0%,#FF6A2A_45%,#E91EAE_100%)] px-6 font-display text-base font-bold shadow-[0_15px_50px_rgba(233,30,174,.28)] disabled:cursor-wait disabled:opacity-60"
+                >
+                  {isStartingCheckout ? "Opening Paystack…" : "Pay ₦10,000"}{" "}
+                  {!isStartingCheckout && <ArrowIcon />}
+                </motion.button>
+
+                <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-white/30">
+                  <span>◉ Secure payment</span>
+                  <span>⚡ Instant access</span>
+                  <span>✓ Lifetime updates</span>
+                </div>
+              </form>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function Offer() {
+  const [accessFormOpen, setAccessFormOpen] = useState(false);
   const features = ["Prompt System", "Reference Framework", "Commercial Usage", "Lifetime Access", "Future Updates"];
   return (
-    <section id="offer" className="section-pad relative">
-      <div className="container-shell">
-        <Reveal>
-          <div className="gradient-border relative overflow-hidden rounded-[36px] p-5 shadow-[0_40px_140px_rgba(233,30,174,.13)] md:p-10 lg:p-14">
+    <>
+      <section id="offer" className="section-pad relative">
+        <div className="container-shell">
+          <Reveal>
+            <div className="gradient-border relative overflow-hidden rounded-[36px] p-5 shadow-[0_40px_140px_rgba(233,30,174,.13)] md:p-10 lg:p-14">
             <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-pink/20 blur-[90px]" />
             <div className="absolute -bottom-28 left-1/4 h-72 w-72 rounded-full bg-yellow/10 blur-[90px]" />
             <div className="relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
@@ -908,17 +1120,30 @@ function Offer() {
                 <div className="my-6 h-px bg-white/10" />
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/40">Pay once</p>
                 <p className="mt-2 font-display text-6xl font-extrabold tracking-[-0.07em] md:text-7xl">₦10,000</p>
-                <CtaButton className="mt-7 w-full min-h-14 text-base">Claim My Access <ArrowIcon /></CtaButton>
+                <motion.button
+                  type="button"
+                  onClick={() => setAccessFormOpen(true)}
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="mt-7 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#F9C80E_0%,#FF6A2A_45%,#E91EAE_100%)] px-6 font-display text-base font-bold shadow-[0_14px_50px_rgba(233,30,174,.28)]"
+                >
+                  Claim My Access <ArrowIcon />
+                </motion.button>
                 <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[9px] font-semibold uppercase tracking-wider text-white/35">
                   <span>◉ Secure checkout</span>
                   <span>⚡ Instant access</span>
                 </div>
               </div>
             </div>
-          </div>
-        </Reveal>
-      </div>
-    </section>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+      <AccessFormModal
+        open={accessFormOpen}
+        close={() => setAccessFormOpen(false)}
+      />
+    </>
   );
 }
 
