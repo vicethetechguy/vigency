@@ -367,29 +367,15 @@ function Transformation() {
   const [phase, setPhase] = useState<"input" | "processing" | "output">("input");
   const [processingStep, setProcessingStep] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
-  const hasEngaged = useRef(false);
+  const demoRef = useRef<HTMLDivElement>(null);
   const completedOnce = useRef(false);
   const replayArmed = useRef(false);
   const replayInProgress = useRef(false);
   const lastScrollY = useRef(0);
+  const gateLastScrollY = useRef(0);
+  const gateScrollY = useRef<number | null>(null);
+  const gateActive = useRef(false);
   const replayTimers = useRef<number[]>([]);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section || phase !== "input") return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting || hasEngaged.current) return;
-        hasEngaged.current = true;
-        section.scrollIntoView({ behavior: "smooth", block: "center" });
-      },
-      { threshold: 0.35 },
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, [phase]);
 
   useEffect(() => {
     if (phase !== "processing") return;
@@ -410,24 +396,82 @@ function Transformation() {
     if (phase !== "output") return;
     completedOnce.current = true;
     replayInProgress.current = false;
+    gateActive.current = false;
+    gateScrollY.current = null;
   }, [phase]);
 
   useEffect(() => {
     const section = sectionRef.current;
-    if (!section || phase === "output") return;
+    const demo = demoRef.current;
+    if (!section || !demo || phase === "output") return;
 
-    const isDemoActive = () => {
-      const rect = section.getBoundingClientRect();
-      return (
-        rect.top < window.innerHeight * 0.74 &&
-        rect.bottom > window.innerHeight * 0.26
+    gateLastScrollY.current = window.scrollY;
+
+    const calculateGatePosition = () => {
+      const demoRect = demo.getBoundingClientRect();
+      const centeredOffset = Math.max(
+        88,
+        (window.innerHeight - Math.min(demoRect.height, window.innerHeight - 112)) /
+          2,
       );
+      return Math.max(0, window.scrollY + demoRect.top - centeredOffset);
+    };
+
+    const holdAtGate = () => {
+      const gate = gateScrollY.current;
+      if (gate === null) return;
+      window.scrollTo({ top: gate, behavior: "auto" });
+    };
+
+    const initialGateY = calculateGatePosition();
+    if (window.scrollY >= initialGateY) {
+      gateScrollY.current = initialGateY;
+      gateActive.current = true;
+      requestAnimationFrame(holdAtGate);
+    }
+
+    const handleScrollGate = () => {
+      const currentScrollY = window.scrollY;
+      const movingDown = currentScrollY > gateLastScrollY.current;
+      const requiredGateY = calculateGatePosition();
+
+      if (
+        movingDown &&
+        currentScrollY >= requiredGateY &&
+        !gateActive.current
+      ) {
+        gateScrollY.current = requiredGateY;
+        gateActive.current = true;
+        holdAtGate();
+      } else if (
+        gateActive.current &&
+        movingDown &&
+        gateScrollY.current !== null &&
+        currentScrollY > gateScrollY.current + 2
+      ) {
+        holdAtGate();
+      } else if (
+        gateActive.current &&
+        !movingDown &&
+        gateScrollY.current !== null &&
+        currentScrollY < gateScrollY.current - 6
+      ) {
+        // Scrolling upward is always allowed. The gate will re-engage when the
+        // visitor moves downward into the incomplete demo again.
+        gateActive.current = false;
+        gateScrollY.current = null;
+      }
+
+      gateLastScrollY.current = window.scrollY;
     };
 
     let touchStartY = 0;
 
     const handleWheel = (event: WheelEvent) => {
-      if (event.deltaY > 0 && isDemoActive()) event.preventDefault();
+      if (event.deltaY > 0 && gateActive.current) {
+        event.preventDefault();
+        holdAtGate();
+      }
     };
 
     const handleTouchStart = (event: TouchEvent) => {
@@ -437,7 +481,10 @@ function Transformation() {
     const handleTouchMove = (event: TouchEvent) => {
       const currentY = event.touches[0]?.clientY ?? touchStartY;
       const movingDownPage = currentY < touchStartY;
-      if (movingDownPage && isDemoActive()) event.preventDefault();
+      if (movingDownPage && gateActive.current) {
+        event.preventDefault();
+        holdAtGate();
+      }
     };
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -446,15 +493,20 @@ function Transformation() {
         event.key === "PageDown" ||
         event.key === "End" ||
         (event.key === " " && !event.shiftKey);
-      if (movesDown && isDemoActive()) event.preventDefault();
+      if (movesDown && gateActive.current) {
+        event.preventDefault();
+        holdAtGate();
+      }
     };
 
+    window.addEventListener("scroll", handleScrollGate, { passive: true });
     window.addEventListener("wheel", handleWheel, { passive: false });
     window.addEventListener("touchstart", handleTouchStart, { passive: true });
     window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+      window.removeEventListener("scroll", handleScrollGate);
       window.removeEventListener("wheel", handleWheel);
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
@@ -490,7 +542,8 @@ function Transformation() {
       if (hasReturnedToDemo) {
         replayArmed.current = false;
         replayInProgress.current = true;
-        section.scrollIntoView({ behavior: "smooth", block: "center" });
+        gateActive.current = false;
+        gateScrollY.current = null;
         setPhase("input");
         setProcessingStep(0);
 
@@ -534,7 +587,7 @@ function Transformation() {
               : "Try the guided demo to experience how the system transforms an idea into a finished design."
           }
         />
-        <div className="mx-auto max-w-3xl">
+        <div ref={demoRef} className="mx-auto max-w-3xl">
           <div className="mb-4 flex items-center justify-center gap-2">
             {["Input", "AI Process", "Output"].map((label, index) => {
               const currentIndex =
@@ -637,11 +690,88 @@ function Transformation() {
                     className="absolute inset-4 rounded-full border border-dashed border-yellow/70"
                   />
                   <motion.div
-                    animate={{ scale: [0.9, 1.08, 0.9] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    className="grid h-16 w-16 place-items-center rounded-full bg-white/[0.055] shadow-[0_0_45px_rgba(233,30,174,.25)]"
+                    animate={{
+                      scale: [0.9, 1.08, 0.9],
+                      boxShadow: [
+                        "0 0 24px rgba(233,30,174,.18)",
+                        "0 0 58px rgba(249,200,14,.32)",
+                        "0 0 24px rgba(233,30,174,.18)",
+                      ],
+                    }}
+                    transition={{ duration: 1.7, repeat: Infinity }}
+                    className="relative grid h-16 w-16 place-items-center rounded-full bg-white/[0.055] shadow-[0_0_45px_rgba(233,30,174,.25)]"
                   >
-                    <span className="gradient-text font-display text-3xl font-black">V</span>
+                    <motion.div
+                      animate={{
+                        rotate: [0, 8, -8, 0],
+                        y: [0, -3, 0],
+                      }}
+                      transition={{
+                        duration: 2.2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      className="relative h-12 w-12"
+                    >
+                      <Image
+                        src="/assets/ai-processing-logo.png"
+                        alt="Vigency processing"
+                        fill
+                        sizes="48px"
+                        className="object-contain drop-shadow-[0_0_12px_rgba(176,92,255,.55)]"
+                      />
+                    </motion.div>
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-1/2 top-[82%] h-24 w-14 -translate-x-1/2 overflow-visible"
+                    >
+                      <motion.div
+                        animate={{
+                          height: [10, 34, 18, 42, 10],
+                          width: [8, 14, 10, 16, 8],
+                          opacity: [0.35, 0.9, 0.65, 1, 0.35],
+                        }}
+                        transition={{
+                          duration: 2.1,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        className="absolute left-1/2 top-0 -translate-x-1/2 rounded-b-full bg-gradient-to-b from-purple via-pink to-orange blur-[0.4px] shadow-[0_8px_22px_rgba(233,30,174,.55)]"
+                      />
+                      {[0, 1, 2].map((drop) => (
+                        <motion.i
+                          key={drop}
+                          animate={{
+                            y: [4, 58],
+                            x: [0, drop === 0 ? -10 : drop === 2 ? 10 : 0],
+                            scale: [0.4, 1, 0.55],
+                            opacity: [0, 0.95, 0],
+                          }}
+                          transition={{
+                            duration: 1.6,
+                            repeat: Infinity,
+                            delay: drop * 0.48,
+                            ease: [0.25, 0.7, 0.35, 1],
+                          }}
+                          className={`absolute left-1/2 top-3 rounded-full ${
+                            drop === 1 ? "h-3.5 w-3.5" : "h-2.5 w-2.5"
+                          } -translate-x-1/2 bg-gradient-to-b from-pink to-yellow shadow-[0_0_16px_rgba(249,200,14,.55)]`}
+                        />
+                      ))}
+                      <motion.div
+                        animate={{
+                          scaleX: [0.35, 1.15, 0.45],
+                          scaleY: [0.6, 1, 0.65],
+                          opacity: [0.15, 0.65, 0.2],
+                        }}
+                        transition={{
+                          duration: 1.8,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                        }}
+                        className="absolute bottom-0 left-1/2 h-2.5 w-12 -translate-x-1/2 rounded-[50%] bg-gradient-to-r from-purple via-pink to-yellow blur-[1px]"
+                      />
+                    </div>
                   </motion.div>
                 </div>
                 <AnimatePresence mode="wait">
