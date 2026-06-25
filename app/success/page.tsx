@@ -11,7 +11,14 @@ export default function SuccessPage() {
         <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.22em] text-yellow">Payment successful</p>
         <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.05em]">You’re in.</h1>
         <p className="mt-4 text-sm leading-7 text-white/55">Your access instructions are on the way. Check the email you used at checkout.</p>
-        <Link href="/" className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 font-display text-sm font-bold text-black">Back to Vigency</Link>
+        <Link
+          href="https://chat.whatsapp.com/LGvkyQeNYw2AoOI01K1v65?s=cl&p=a&mlu=1"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 font-display text-sm font-bold text-black"
+        >
+          Get Access
+        </Link>
       </div>
     </main>
   );
