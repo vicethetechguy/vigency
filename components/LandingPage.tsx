@@ -252,7 +252,7 @@ function Hero() {
             <span className="text-white/35 line-through">₦100,000</span>
             <span className="font-bold text-white">Now ₦10,000</span>
             <span className="rounded-full bg-pink/15 px-2.5 py-1 font-bold text-pink">Save 90%</span>
-            <span className="text-white/35">Offer ends June 30</span>
+            <span className="text-white/35">Offer ends July 5th</span>
           </motion.div>
         </div>
 
@@ -1278,6 +1278,12 @@ function Offer() {
 }
 
 function SocialProof() {
+  const peopleByRole = {
+    "Creative founder": { name: "Fatima Acheampong", role: "Creative Founder" },
+    "Social media manager": { name: "Olosunde Eniitan", role: "Social Media Manager" },
+    "Brand designer": { name: "Eunice Sharon Eyo", role: "Brand Designer" },
+  } as const;
+
   return (
     <section className="pb-10">
       <div className="container-shell">
@@ -1287,15 +1293,22 @@ function SocialProof() {
             ["“I finally got the exact visual direction I had in mind.”", "Creative founder"],
             ["“It turns a rough idea into something the AI can actually use.”", "Social media manager"],
             ["“The reference framework alone changed my output quality.”", "Brand designer"],
-          ].map(([quote, role], i) => (
+          ].map(([quote, role], i) => {
+            const person = peopleByRole[role as keyof typeof peopleByRole];
+
+            return (
             <Reveal key={quote} delay={i * 0.08}>
               <div className="rounded-[24px] border border-white/[0.07] bg-white/[0.025] p-6">
                 <div className="mb-4 text-xs tracking-[0.2em] text-yellow">★★★★★</div>
                 <p className="font-display text-base font-semibold leading-6">{quote}</p>
-                <p className="mt-5 text-[10px] font-semibold uppercase tracking-wider text-white/30">{role}</p>
+                <div className="mt-5">
+                  <p className="font-display text-sm font-bold text-white">{person.name}</p>
+                  <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-white/30">{person.role}</p>
+                </div>
               </div>
             </Reveal>
-          ))}
+            );
+          })}
         </div>
       </div>
     </section>
