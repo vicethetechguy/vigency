@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 function getRemaining() {
-  const end = new Date("2026-06-30T23:59:59+01:00").getTime();
+  const end = new Date("2026-07-05T23:59:59+01:00").getTime();
   const distance = Math.max(0, end - Date.now());
   return {
     days: Math.floor(distance / 86_400_000),

@@ -17,24 +17,28 @@ import {
 const benefits = [
   {
     number: "01",
+    numberColor: "#F9C80E",
     title: "Single Prompt System",
     description: "One intelligent prompt generates complete, art-directed flyer concepts.",
     icon: "✦",
   },
   {
     number: "02",
+    numberColor: "#E91EAE",
     title: "Reference Guided Design",
     description: "Upload references and preserve the exact style direction you want.",
     icon: "⌁",
   },
   {
     number: "03",
+    numberColor: "#FF6A2A",
     title: "Unlimited Categories",
     description: "Business, events, tech, social, finance, product—and whatever comes next.",
     icon: "∞",
   },
   {
     number: "04",
+    numberColor: "#B05CFF",
     title: "Ready-to-Use Outputs",
     description: "Create polished visual concepts built for real campaigns and real attention.",
     icon: "↗",
@@ -211,7 +215,7 @@ function Hero() {
             transition={{ duration: 0.65, delay: 0.18 }}
             className="mx-auto mt-7 max-w-2xl text-sm leading-7 text-white/60 md:text-lg md:leading-8"
           >
-            Turn one prompt and a visual reference into professional flyers,
+            Turn one super prompt and a visual reference into professional flyers,
             campaigns, social creatives, business visuals, and more—in minutes.
           </motion.p>
           <motion.div
@@ -339,13 +343,19 @@ function Inside() {
                 whileHover={{ y: -7 }}
                 className="group relative min-h-[250px] overflow-hidden rounded-[30px] border border-white/[0.08] bg-white/[0.035] p-6 transition-colors hover:bg-white/[0.055] md:p-8"
               >
-                <div className="absolute right-5 top-2 font-display text-[86px] font-black text-white/[0.025]">
+                <div
+                  className="absolute right-5 top-2 font-display text-[86px] font-black opacity-[0.16]"
+                  style={{ color: item.numberColor }}
+                >
                   {item.number}
                 </div>
                 <div className="grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/[0.05] font-display text-xl font-bold text-yellow transition-transform group-hover:rotate-6 group-hover:scale-110">
                   {item.icon}
                 </div>
-                <p className="mt-12 text-[10px] font-bold tracking-[0.2em] text-white/30">
+                <p
+                  className="mt-12 text-[10px] font-bold tracking-[0.2em]"
+                  style={{ color: item.numberColor }}
+                >
                   {item.number}
                 </p>
                 <h3 className="mt-2 font-display text-2xl font-bold tracking-[-0.03em]">
@@ -1450,7 +1460,7 @@ export function LandingPage() {
       </footer>
       <div className="glass fixed bottom-3 left-3 right-3 z-30 flex items-center justify-between rounded-2xl p-2 pl-4 md:hidden">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-white/35">90% off · ends June 30</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-white/35">90% off · ends July 5th</p>
           <p className="mt-0.5 font-display text-sm font-bold"><span className="mr-1 text-white/25 line-through">₦100k</span> ₦10,000</p>
         </div>
         <CtaButton className="min-h-11 px-5 text-xs">Get Access <ArrowIcon /></CtaButton>
