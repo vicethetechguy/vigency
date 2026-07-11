@@ -381,11 +381,11 @@ function Transformation() {
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, margin: "-120px" }}
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-            className="display-card overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0d0d] p-2 shadow-[0_30px_100px_rgba(0,0,0,.35)] md:p-3"
+            className="display-card overflow-hidden rounded-xl shadow-[0_30px_100px_rgba(0,0,0,.35)]"
           >
             <video
               src="/assets/spyda-website-video-final.mp4"
-              className="aspect-video w-full rounded-[22px] object-cover"
+              className="aspect-video w-full rounded-xl object-cover"
               autoPlay
               muted
               loop
