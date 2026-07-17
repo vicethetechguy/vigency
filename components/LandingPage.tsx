@@ -429,18 +429,20 @@ function Transformation() {
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: true, margin: "-120px" }}
             transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-            className="display-card overflow-hidden rounded-xl border border-white/[0.06] shadow-[0_30px_100px_rgba(0,0,0,.35)]"
+            className="display-card overflow-hidden rounded-xl bg-gradient-to-br from-[#f9c80e] via-[#ff6a2a] to-[#e91eae] p-[1.5px] shadow-[0_30px_100px_rgba(0,0,0,.35)]"
           >
-            <video
-              src="/assets/spyda-website-video-final.mp4"
-              className="aspect-video w-full rounded-xl object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
-              preload="metadata"
-            />
+            <div className="overflow-hidden rounded-[10.5px] bg-black">
+              <video
+                src="/assets/spyda-website-video-final.mp4"
+                className="aspect-video w-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                preload="metadata"
+              />
+            </div>
           </motion.div>
         </div>
       </div>
