@@ -1,10 +1,29 @@
 import crypto from "node:crypto";
 
-export const PRODUCT_AMOUNT_KOBO = 1_000_000;
-export const PRODUCT_CURRENCY = "NGN";
+export const TIERS = {
+  starter: { amountKobo: 700_000, credits: 500, label: "Starter", priceNGN: "₦7,000", priceUSD: "$5" },
+  creator: { amountKobo: 1_300_000, credits: 1_000, label: "Creator", priceNGN: "₦13,000", priceUSD: "$10" },
+  studio:  { amountKobo: 2_500_000, credits: 2_800, label: "Studio", priceNGN: "₦25,000", priceUSD: "$25" },
+} as const;
 
-export function createPromoCode() {
-  return crypto.randomInt(100_000, 1_000_000).toString();
+export type TierKey = keyof typeof TIERS;
+
+const VALID_TIER_KEYS = new Set<string>(Object.keys(TIERS));
+
+export function isValidTier(tier: string): tier is TierKey {
+  return VALID_TIER_KEYS.has(tier);
+}
+
+const COUPON_CHARSET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+export function createCouponCode() {
+  let group1 = "";
+  let group2 = "";
+  for (let i = 0; i < 4; i++) {
+    group1 += COUPON_CHARSET[crypto.randomInt(COUPON_CHARSET.length)];
+    group2 += COUPON_CHARSET[crypto.randomInt(COUPON_CHARSET.length)];
+  }
+  return `SPYDA-${group1}-${group2}`;
 }
 
 export function normalizeWhatsAppNumber(value: string) {
@@ -37,6 +56,60 @@ export function verifyPaystackSignature(rawBody: string, signature: string) {
   return (
     receivedBuffer.length === expectedBuffer.length &&
     crypto.timingSafeEqual(receivedBuffer, expectedBuffer)
+  );
+}
+
+export async function saveCheckoutLeadToSheet({
+  fullName,
+  email,
+  whatsapp,
+  status,
+  reference,
+  promoCode,
+  amount = "10000",
+  tier,
+  credits,
+}: {
+  fullName: string;
+  email?: string;
+  whatsapp: string;
+  status: "Started Checkout" | "Paid";
+  reference?: string;
+  promoCode: string;
+  amount?: string;
+  tier?: string;
+  credits?: number;
+}) {
+  const sheetsUrl = process.env.GOOGLE_SHEETS_WEB_APP_URL;
+  if (!sheetsUrl) return;
+
+  const response = await fetch(sheetsUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      fullName,
+      email: email || "",
+      whatsapp,
+      status,
+      reference: reference || "",
+      promoCode,
+      amount,
+      tier: tier || "",
+      credits: credits ?? "",
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Google Sheets save failed: ${response.status} ${error}`);
+  }
+}
+
+export function hasWhatsAppPaymentConfig() {
+  return Boolean(
+    process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID,
   );
 }
 

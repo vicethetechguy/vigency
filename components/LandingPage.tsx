@@ -4,7 +4,6 @@ import Image from "next/image";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Countdown } from "./Countdown";
 import {
   ArrowIcon,
   CheckIcon,
@@ -14,34 +13,59 @@ import {
   SectionIntro,
 } from "./ui";
 
+/* ------------------------------------------------------------------ */
+/*  Tier data (mirrors lib/checkout.ts — client-safe display values)  */
+/* ------------------------------------------------------------------ */
+
+type Tier = {
+  key: string;
+  label: string;
+  credits: number;
+  priceNGN: string;
+  priceUSD: string;
+  amountNGN: number;
+  badge?: string;
+  popular?: boolean;
+};
+
+const tiers: Tier[] = [
+  { key: "starter", label: "Starter", credits: 500, priceNGN: "₦7,000", priceUSD: "$5", amountNGN: 7_000 },
+  { key: "creator", label: "Creator", credits: 1_000, priceNGN: "₦13,000", priceUSD: "$10", amountNGN: 13_000, popular: true },
+  { key: "studio", label: "Studio", credits: 2_800, priceNGN: "₦25,000", priceUSD: "$25", amountNGN: 25_000, badge: "+300 bonus" },
+];
+
+/* ------------------------------------------------------------------ */
+/*  Static content arrays                                              */
+/* ------------------------------------------------------------------ */
+
 const benefits = [
   {
     number: "01",
     numberColor: "#F9C80E",
-    title: "Single Prompt System",
-    description: "One intelligent prompt generates complete, art-directed flyer concepts.",
-    icon: "✦",
+    title: "Instant Coupon Codes",
+    description: "Pay and receive a unique SPYDA-XXXX-XXXX code in seconds — delivered to your email and WhatsApp.",
+    icon: "⚡",
   },
   {
     number: "02",
     numberColor: "#E91EAE",
-    title: "Reference Guided Design",
-    description: "Upload references and preserve the exact style direction you want.",
-    icon: "⌁",
+    title: "Three Credit Tiers",
+    description: "Starter (500), Creator (1,000), or Studio (2,800 with a bonus) — pick the level that fits your workflow.",
+    icon: "◆",
   },
   {
     number: "03",
     numberColor: "#FF6A2A",
-    title: "Unlimited Categories",
-    description: "Business, events, tech, social, finance, product—and whatever comes next.",
-    icon: "∞",
+    title: "Single-Use & Secure",
+    description: "Each code redeems once, locked atomically. No double-spend, no sharing — guaranteed one use.",
+    icon: "🔒",
   },
   {
     number: "04",
     numberColor: "#B05CFF",
-    title: "Ready-to-Use Outputs",
-    description: "Create polished visual concepts built for real campaigns and real attention.",
-    icon: "↗",
+    title: "Earn SPYDA Tokens",
+    description: "For every 1,000 credits you actually spend on generations, earn 1 SPYDA pre-launch token. Use more, earn more.",
+    icon: "✦",
   },
 ];
 
@@ -53,6 +77,33 @@ const examples = [
   { title: "FluxyPrime", kicker: "Logistics promotion", image: "/assets/showcase-fluxy.png" },
   { title: "Melt Verse", kicker: "Product advertisement", image: "/assets/showcase-meltverse.png" },
   { title: "Charis Cedarine", kicker: "Event hospitality", image: "/assets/showcase-charis.png" },
+];
+
+const faqs = [
+  {
+    q: "What are Spyda Credits?",
+    a: "Spyda Credits are the internal currency used inside Spyda. You spend credits to power AI generations — 20 credits per round on managed AI, or 5 credits if you bring your own API key.",
+  },
+  {
+    q: "How do coupon codes work?",
+    a: "After a successful payment, you receive a unique single-use code in the format SPYDA-XXXX-XXXX. Enter the code on Spyda's funding page to add the credits to your wallet instantly.",
+  },
+  {
+    q: "What are the credit tiers?",
+    a: "Three denominations: Starter (500 credits for ₦7,000 / $5), Creator (1,000 credits for ₦13,000 / $10), and Studio (2,800 credits for ₦25,000 / $25). The Studio tier includes a 300-credit bonus.",
+  },
+  {
+    q: "What are SPYDA Tokens?",
+    a: "For every 1,000 credits you actually spend on generations (not merely funded), your account earns 1 SPYDA pre-launch token. Funding alone earns nothing — only consumption does.",
+  },
+  {
+    q: "Can a coupon code be used more than once?",
+    a: "No. Each code is single-use. The system validates and burns it atomically — even two simultaneous redemption attempts will not work. Once redeemed, the code is dead forever.",
+  },
+  {
+    q: "How do I redeem my code?",
+    a: "Go to Spyda's funding page, enter your SPYDA-XXXX-XXXX code, and the credits will be added to your wallet balance immediately.",
+  },
 ];
 
 function ArtworkCard({
@@ -83,28 +134,9 @@ function ArtworkCard({
   );
 }
 
-const faqs = [
-  {
-    q: "Who is this for?",
-    a: "Creators, founders, social media managers, marketers, designers, agencies, and anyone who needs stronger graphics without wrestling with vague AI outputs.",
-  },
-  {
-    q: "Do I need design experience?",
-    a: "No. The system helps you communicate the design direction clearly. You bring the idea and reference; the framework turns it into a structured prompt.",
-  },
-  {
-    q: "How do references work?",
-    a: "You provide a flyer, moodboard, screenshot, or visual style you like. The framework guides the AI to borrow the direction—layout, mood, color, and energy—without copying it blindly.",
-  },
-  {
-    q: "Will I receive updates?",
-    a: "Yes. Your purchase includes future improvements to the prompt system at no additional charge.",
-  },
-  {
-    q: "How do I access it after payment?",
-    a: "You receive instant access instructions after successful checkout, with a copy also sent to your email.",
-  },
-];
+/* ------------------------------------------------------------------ */
+/*  Navigation                                                         */
+/* ------------------------------------------------------------------ */
 
 function Navigation() {
   return (
@@ -114,17 +146,22 @@ function Navigation() {
           <Logo className="md:w-[172px]" />
         </a>
         <div className="hidden items-center gap-7 text-xs font-semibold text-white/55 lg:flex">
-          <a className="transition-colors hover:text-white" href="#inside">Inside</a>
+          <a className="transition-colors hover:text-white" href="#how-it-works">How it works</a>
           <a className="transition-colors hover:text-white" href="#examples">Samples</a>
+          <a className="transition-colors hover:text-white" href="#pricing">Pricing</a>
           <a className="transition-colors hover:text-white" href="#faq">FAQ</a>
         </div>
-        <CtaButton className="min-h-10 px-4 text-xs md:min-h-11 md:px-5" href="#offer">
-          Get Access <ArrowIcon />
+        <CtaButton className="min-h-10 px-4 text-xs md:min-h-11 md:px-5" href="#pricing">
+          Buy Credits <ArrowIcon />
         </CtaButton>
       </nav>
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Hero                                                               */
+/* ------------------------------------------------------------------ */
 
 function Hero() {
   const heroRef = useRef<HTMLElement>(null);
@@ -143,7 +180,7 @@ function Hero() {
     ["4%", "48%", "92%"],
   );
 
-  const headingLines = ["CREATE", "ANY TYPE OF", "GRAPHIC DESIGN"];
+  const headingLines = ["FUND YOUR", "SPYDA", "WALLET"];
 
   return (
     <section
@@ -165,7 +202,7 @@ function Hero() {
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-yellow opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-yellow" />
             </span>
-            Limited access · June promo
+            Spyda Credits
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
@@ -215,8 +252,8 @@ function Hero() {
             transition={{ duration: 0.65, delay: 0.18 }}
             className="mx-auto mt-7 max-w-2xl text-sm leading-7 text-white/60 md:text-lg md:leading-8"
           >
-            Turn one super prompt and a visual reference into professional flyers,
-            campaigns, social creatives, business visuals, and more—in minutes.
+            Buy Spyda Credits instantly. Get a single-use coupon code.
+            Redeem it in Spyda to power your AI-driven design generations.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, y: 18 }}
@@ -224,8 +261,8 @@ function Hero() {
             transition={{ duration: 0.65, delay: 0.26 }}
             className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row"
           >
-            <CtaButton className="w-full px-7 sm:w-auto">
-              Get Access <span className="opacity-70">→</span> ₦10,000
+            <CtaButton className="w-full px-7 sm:w-auto" href="#pricing">
+              Buy Credits <span className="opacity-70">→</span> from ₦7,000
             </CtaButton>
             <motion.a
               whileHover={{ scale: 1.03 }}
@@ -251,12 +288,13 @@ function Hero() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.45 }}
-            className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs"
+            className="mt-5 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs"
           >
-            <span className="text-white/35 line-through">₦100,000</span>
-            <span className="font-bold text-white">Now ₦10,000</span>
-            <span className="rounded-full bg-pink/15 px-2.5 py-1 font-bold text-pink">Save 90%</span>
-            <span className="text-white/35">Offer ends July 5th</span>
+            {tiers.map((tier) => (
+              <span key={tier.key} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 font-semibold text-white/50">
+                {tier.label}: <span className="text-white">{tier.credits.toLocaleString()}</span> credits
+              </span>
+            ))}
           </motion.div>
         </div>
 
@@ -271,7 +309,7 @@ function Hero() {
             <div className="relative aspect-[1/1.04] overflow-hidden rounded-[24px] bg-black md:aspect-[16/8.6] md:rounded-[32px]">
               <Image
                 src="/assets/design-collage.png"
-                alt="Examples of graphic designs created with the Vigency prompt system"
+                alt="Examples of graphic designs created with Spyda AI"
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, 1060px"
@@ -281,10 +319,10 @@ function Hero() {
               <div className="absolute inset-x-4 bottom-4 flex items-end justify-between md:inset-x-7 md:bottom-7">
                 <div className="rounded-2xl border border-white/10 bg-black/65 p-3 backdrop-blur-md md:p-4">
                   <p className="text-[8px] font-bold uppercase tracking-[0.18em] text-white/45">
-                    Prompt system
+                    Powered by Spyda
                   </p>
                   <p className="mt-1 font-display text-sm font-bold md:text-base">
-                    One input. Infinite directions.
+                    Credits in. Designs out.
                   </p>
                 </div>
                 <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-black/65 px-4 py-2 text-[10px] font-bold backdrop-blur-md sm:flex">
@@ -294,7 +332,7 @@ function Hero() {
               </div>
             </div>
           </div>
-          {["Instagram Flyer", "Event Poster", "Crypto Design", "Product Ad"].map(
+          {["500 Credits", "1,000 Credits", "2,800 Credits", "SPYDA Tokens"].map(
             (label, index) => (
               <motion.div
                 key={label}
@@ -316,25 +354,23 @@ function Hero() {
             ),
           )}
         </motion.div>
-        <div className="mt-10 flex flex-col items-center gap-3">
-          <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">
-            Price returns to ₦100,000 in
-          </p>
-          <Countdown compact />
-        </div>
       </div>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Inside (Benefits)                                                  */
+/* ------------------------------------------------------------------ */
 
 function Inside() {
   return (
     <section id="inside" className="section-pad relative">
       <div className="container-shell">
         <SectionIntro
-          eyebrow="The complete system"
-          title={<>Everything <span className="gradient-text">inside.</span></>}
-          description="Not a folder of random prompts. A clear creative system built to make your ideas legible to AI."
+          eyebrow="Why Spyda Credits"
+          title={<>Everything you <span className="gradient-text">need.</span></>}
+          description="A simple, secure system to fund your Spyda wallet and power unlimited AI design generations."
         />
         <div className="grid gap-3 md:grid-cols-2">
           {benefits.map((item, index) => (
@@ -373,477 +409,48 @@ function Inside() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Transformation (video)                                             */
+/* ------------------------------------------------------------------ */
+
 function Transformation() {
-  const [phase, setPhase] = useState<"input" | "processing" | "output">("input");
-  const [processingStep, setProcessingStep] = useState(0);
-  const sectionRef = useRef<HTMLElement>(null);
-  const demoRef = useRef<HTMLDivElement>(null);
-  const completedOnce = useRef(false);
-  const replayArmed = useRef(false);
-  const replayInProgress = useRef(false);
-  const lastScrollY = useRef(0);
-  const gateLastScrollY = useRef(0);
-  const gateScrollY = useRef<number | null>(null);
-  const gateActive = useRef(false);
-  const replayTimers = useRef<number[]>([]);
-
-  useEffect(() => {
-    if (phase !== "processing") return;
-
-    setProcessingStep(0);
-    const analyzeTimer = window.setTimeout(() => setProcessingStep(1), 1500);
-    const renderTimer = window.setTimeout(() => setProcessingStep(2), 3200);
-    const outputTimer = window.setTimeout(() => setPhase("output"), 5000);
-
-    return () => {
-      window.clearTimeout(analyzeTimer);
-      window.clearTimeout(renderTimer);
-      window.clearTimeout(outputTimer);
-    };
-  }, [phase]);
-
-  useEffect(() => {
-    if (phase !== "output") return;
-    completedOnce.current = true;
-    replayInProgress.current = false;
-    gateActive.current = false;
-    gateScrollY.current = null;
-  }, [phase]);
-
-  useEffect(() => {
-    const section = sectionRef.current;
-    const demo = demoRef.current;
-    if (!section || !demo || phase === "output") return;
-
-    gateLastScrollY.current = window.scrollY;
-
-    const calculateGatePosition = () => {
-      const demoRect = demo.getBoundingClientRect();
-      const centeredOffset = Math.max(
-        88,
-        (window.innerHeight - Math.min(demoRect.height, window.innerHeight - 112)) /
-          2,
-      );
-      return Math.max(0, window.scrollY + demoRect.top - centeredOffset);
-    };
-
-    const holdAtGate = () => {
-      const gate = gateScrollY.current;
-      if (gate === null) return;
-      window.scrollTo({ top: gate, behavior: "auto" });
-    };
-
-    const initialGateY = calculateGatePosition();
-    if (window.scrollY >= initialGateY) {
-      gateScrollY.current = initialGateY;
-      gateActive.current = true;
-      requestAnimationFrame(holdAtGate);
-    }
-
-    const handleScrollGate = () => {
-      const currentScrollY = window.scrollY;
-      const movingDown = currentScrollY > gateLastScrollY.current;
-      const requiredGateY = calculateGatePosition();
-
-      if (
-        movingDown &&
-        currentScrollY >= requiredGateY &&
-        !gateActive.current
-      ) {
-        gateScrollY.current = requiredGateY;
-        gateActive.current = true;
-        holdAtGate();
-      } else if (
-        gateActive.current &&
-        movingDown &&
-        gateScrollY.current !== null &&
-        currentScrollY > gateScrollY.current + 2
-      ) {
-        holdAtGate();
-      } else if (
-        gateActive.current &&
-        !movingDown &&
-        gateScrollY.current !== null &&
-        currentScrollY < gateScrollY.current - 6
-      ) {
-        // Scrolling upward is always allowed. The gate will re-engage when the
-        // visitor moves downward into the incomplete demo again.
-        gateActive.current = false;
-        gateScrollY.current = null;
-      }
-
-      gateLastScrollY.current = window.scrollY;
-    };
-
-    let touchStartY = 0;
-
-    const handleWheel = (event: WheelEvent) => {
-      if (event.deltaY > 0 && gateActive.current) {
-        event.preventDefault();
-        holdAtGate();
-      }
-    };
-
-    const handleTouchStart = (event: TouchEvent) => {
-      touchStartY = event.touches[0]?.clientY ?? 0;
-    };
-
-    const handleTouchMove = (event: TouchEvent) => {
-      const currentY = event.touches[0]?.clientY ?? touchStartY;
-      const movingDownPage = currentY < touchStartY;
-      if (movingDownPage && gateActive.current) {
-        event.preventDefault();
-        holdAtGate();
-      }
-    };
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      const movesDown =
-        event.key === "ArrowDown" ||
-        event.key === "PageDown" ||
-        event.key === "End" ||
-        (event.key === " " && !event.shiftKey);
-      if (movesDown && gateActive.current) {
-        event.preventDefault();
-        holdAtGate();
-      }
-    };
-
-    window.addEventListener("scroll", handleScrollGate, { passive: true });
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("scroll", handleScrollGate);
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [phase]);
-
-  useEffect(() => {
-    lastScrollY.current = window.scrollY;
-
-    const handleScroll = () => {
-      const section = sectionRef.current;
-      if (!section || !completedOnce.current) {
-        lastScrollY.current = window.scrollY;
-        return;
-      }
-
-      const rect = section.getBoundingClientRect();
-      const scrollingDown = window.scrollY > lastScrollY.current;
-
-      if (rect.top > window.innerHeight) {
-        replayArmed.current = true;
-      }
-
-      const hasReturnedToDemo =
-        scrollingDown &&
-        replayArmed.current &&
-        !replayInProgress.current &&
-        phase === "output" &&
-        rect.top < window.innerHeight * 0.72 &&
-        rect.bottom > window.innerHeight * 0.28;
-
-      if (hasReturnedToDemo) {
-        replayArmed.current = false;
-        replayInProgress.current = true;
-        gateActive.current = false;
-        gateScrollY.current = null;
-        setPhase("input");
-        setProcessingStep(0);
-
-        const replayTimer = window.setTimeout(() => {
-          setPhase("processing");
-        }, 1200);
-
-        replayTimers.current = [replayTimer];
-      }
-
-      lastScrollY.current = window.scrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [phase]);
-
-  useEffect(
-    () => () => {
-      replayTimers.current.forEach((timer) => window.clearTimeout(timer));
-    },
-    [],
-  );
-
-  const processingMessages = [
-    "Understanding your creative direction",
-    "Applying the reference framework",
-    "Rendering your final design",
-  ];
-
   return (
-    <section ref={sectionRef} id="transformation" className="section-pad relative min-h-screen">
+    <section id="transformation" className="section-pad relative">
       <div className="absolute left-1/2 top-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink/10 blur-[160px]" />
       <div className="container-shell">
         <SectionIntro
-          eyebrow="Live transformation"
-          title={<>From idea <span className="text-white/25">→</span> final design.</>}
-          description={
-            phase === "output"
-              ? "Demo complete. Your idea has been transformed into a campaign-ready visual."
-              : "Try the guided demo to experience how the system transforms an idea into a finished design."
-          }
+          eyebrow="See Spyda in action"
+          title={<>From credits <span className="text-white/25">→</span> final design.</>}
+          description="Watch how Spyda turns your credits into polished, campaign-ready visuals in minutes."
         />
-        <div ref={demoRef} className="mx-auto max-w-3xl">
-          <div className="mb-4 flex items-center justify-center gap-2">
-            {["Input", "AI Process", "Output"].map((label, index) => {
-              const currentIndex =
-                phase === "input" ? 0 : phase === "processing" ? 1 : 2;
-              return (
-                <div key={label} className="flex items-center gap-2">
-                  <div
-                    className={`flex items-center gap-2 rounded-full border px-3 py-2 text-[8px] font-bold uppercase tracking-[0.16em] transition-all duration-500 ${
-                      index === currentIndex
-                        ? "border-yellow/40 bg-yellow/10 text-yellow"
-                        : index < currentIndex
-                          ? "border-white/10 bg-white/[0.04] text-white/55"
-                          : "border-white/[0.06] text-white/20"
-                    }`}
-                  >
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <span className="hidden sm:inline">{label}</span>
-                  </div>
-                  {index < 2 && <span className="h-px w-5 bg-white/10 sm:w-10" />}
-                </div>
-              );
-            })}
-          </div>
-
-          <AnimatePresence mode="wait">
-            {phase === "input" && (
-              <motion.div
-                key="input"
-                initial={{ opacity: 0, y: 24, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -50, scale: 0.97 }}
-                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                className="display-card flex min-h-[390px] flex-col rounded-[30px] border border-white/10 bg-[#0d0d0d] p-6 md:min-h-[430px] md:p-8"
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
-                    01 · Input
-                  </p>
-                  <div className="flex gap-1">
-                    <i className="h-2 w-2 rounded-full bg-red-400/70" />
-                    <i className="h-2 w-2 rounded-full bg-yellow/70" />
-                    <i className="h-2 w-2 rounded-full bg-green-400/70" />
-                  </div>
-                </div>
-                <div className="my-auto rounded-[22px] border border-white/10 bg-white/[0.035] p-5 md:p-7">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs font-semibold text-white/35">Describe your idea</p>
-                    <span className="rounded-full border border-white/10 px-2.5 py-1 text-[8px] font-bold uppercase tracking-wider text-white/25">
-                      Demo prompt
-                    </span>
-                  </div>
-                  <p className="mt-5 font-display text-2xl font-bold leading-8 md:text-3xl md:leading-10">
-                    “Create a bold flyer for my fintech startup.”
-                    <motion.span
-                      animate={{ opacity: [1, 0, 1] }}
-                      transition={{ duration: 0.9, repeat: Infinity }}
-                      className="ml-1 inline-block h-6 w-[2px] bg-yellow align-middle"
-                    />
-                  </p>
-                </div>
-                <div className="flex items-center justify-between gap-4">
-                  <p className="text-[10px] font-semibold text-white/35">
-                    Click the Run button to continue
-                  </p>
-                  <motion.button
-                    type="button"
-                    onClick={() => setPhase("processing")}
-                    whileHover={{ scale: 1.04 }}
-                    whileTap={{ scale: 0.97 }}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-[linear-gradient(135deg,#F9C80E,#FF6A2A_48%,#E91EAE)] px-6 font-display text-xs font-bold shadow-[0_12px_40px_rgba(233,30,174,.25)]"
-                  >
-                    Run <span>→</span>
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-
-            {phase === "processing" && (
-              <motion.div
-                key="processing"
-                initial={{ opacity: 0, x: 50, scale: 0.97 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -50, scale: 0.97 }}
-                transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-                className="display-card relative flex min-h-[430px] flex-col items-center justify-center overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0d0d] p-7 text-center"
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(233,30,174,.12),transparent_52%)]" />
-                <p className="absolute left-6 top-6 text-[9px] font-bold uppercase tracking-[0.22em] text-white/35">
-                  02 · AI Process
-                </p>
-                <div className="relative grid h-32 w-32 place-items-center">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 rounded-full border border-dashed border-pink/70"
-                  />
-                  <motion.div
-                    animate={{ rotate: -360 }}
-                    transition={{ duration: 2.8, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-4 rounded-full border border-dashed border-yellow/70"
-                  />
-                  <motion.div
-                    animate={{
-                      scale: [0.9, 1.08, 0.9],
-                      boxShadow: [
-                        "0 0 24px rgba(233,30,174,.18)",
-                        "0 0 58px rgba(249,200,14,.32)",
-                        "0 0 24px rgba(233,30,174,.18)",
-                      ],
-                    }}
-                    transition={{ duration: 1.7, repeat: Infinity }}
-                    className="relative grid h-16 w-16 place-items-center rounded-full bg-white/[0.055] shadow-[0_0_45px_rgba(233,30,174,.25)]"
-                  >
-                    <motion.div
-                      animate={{
-                        rotate: [0, 8, -8, 0],
-                        y: [0, -3, 0],
-                      }}
-                      transition={{
-                        duration: 2.2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      }}
-                      className="relative h-12 w-12"
-                    >
-                      <Image
-                        src="/assets/ai-processing-logo.png"
-                        alt="Vigency processing"
-                        fill
-                        sizes="48px"
-                        className="object-contain drop-shadow-[0_0_12px_rgba(176,92,255,.55)]"
-                      />
-                    </motion.div>
-                    <div
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-1/2 top-[82%] h-24 w-14 -translate-x-1/2 overflow-visible"
-                    >
-                      <motion.div
-                        animate={{
-                          height: [10, 34, 18, 42, 10],
-                          width: [8, 14, 10, 16, 8],
-                          opacity: [0.35, 0.9, 0.65, 1, 0.35],
-                        }}
-                        transition={{
-                          duration: 2.1,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                        className="absolute left-1/2 top-0 -translate-x-1/2 rounded-b-full bg-gradient-to-b from-purple via-pink to-orange blur-[0.4px] shadow-[0_8px_22px_rgba(233,30,174,.55)]"
-                      />
-                      {[0, 1, 2].map((drop) => (
-                        <motion.i
-                          key={drop}
-                          animate={{
-                            y: [4, 58],
-                            x: [0, drop === 0 ? -10 : drop === 2 ? 10 : 0],
-                            scale: [0.4, 1, 0.55],
-                            opacity: [0, 0.95, 0],
-                          }}
-                          transition={{
-                            duration: 1.6,
-                            repeat: Infinity,
-                            delay: drop * 0.48,
-                            ease: [0.25, 0.7, 0.35, 1],
-                          }}
-                          className={`absolute left-1/2 top-3 rounded-full ${
-                            drop === 1 ? "h-3.5 w-3.5" : "h-2.5 w-2.5"
-                          } -translate-x-1/2 bg-gradient-to-b from-pink to-yellow shadow-[0_0_16px_rgba(249,200,14,.55)]`}
-                        />
-                      ))}
-                      <motion.div
-                        animate={{
-                          scaleX: [0.35, 1.15, 0.45],
-                          scaleY: [0.6, 1, 0.65],
-                          opacity: [0.15, 0.65, 0.2],
-                        }}
-                        transition={{
-                          duration: 1.8,
-                          repeat: Infinity,
-                          ease: "easeInOut",
-                        }}
-                        className="absolute bottom-0 left-1/2 h-2.5 w-12 -translate-x-1/2 rounded-[50%] bg-gradient-to-r from-purple via-pink to-yellow blur-[1px]"
-                      />
-                    </div>
-                  </motion.div>
-                </div>
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={processingStep}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className="relative mt-8 font-display text-base font-bold"
-                  >
-                    {processingMessages[processingStep]}
-                  </motion.p>
-                </AnimatePresence>
-                <div className="relative mt-6 h-1.5 w-full max-w-sm overflow-hidden rounded-full bg-white/[0.06]">
-                  <motion.div
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 5, ease: "linear" }}
-                    className="h-full rounded-full bg-gradient-to-r from-yellow via-orange to-pink"
-                  />
-                </div>
-                <p className="relative mt-4 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/30">
-                  Generating your visual · Please wait
-                </p>
-              </motion.div>
-            )}
-
-            {phase === "output" && (
-              <motion.div
-                key="output"
-                initial={{ opacity: 0, y: 36, scale: 0.9, filter: "blur(14px)" }}
-                animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-                className="display-card relative mx-auto max-w-[520px] overflow-hidden rounded-[30px] border border-white/10 bg-[#0d0d0d] p-3"
-              >
-                <div className="absolute left-6 top-6 z-20 flex items-center gap-2 rounded-full bg-black/65 px-3 py-2 text-[8px] font-bold uppercase tracking-[0.16em] backdrop-blur-md">
-                  <span className="h-2 w-2 rounded-full bg-green-400" />
-                  03 · Output ready
-                </div>
-                <ArtworkCard
-                  src="/assets/showcase-gexipay.png"
-                  alt="Gexipay fintech promotional flyer"
-                  className="!rounded-[22px]"
-                  priority
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          <motion.p
-            animate={{ opacity: phase === "output" ? 1 : 0.45 }}
-            className="mt-5 text-center text-[9px] font-bold uppercase tracking-[0.2em] text-white/35"
+        <div className="mx-auto max-w-5xl">
+          <motion.div
+            initial={{ opacity: 0, y: 24, scale: 0.98 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: true, margin: "-120px" }}
+            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
+            className="display-card overflow-hidden rounded-xl border border-white/[0.06] shadow-[0_30px_100px_rgba(0,0,0,.35)]"
           >
-            {phase === "output"
-              ? "Experience complete · Continue scrolling"
-              : "Complete this guided experience to continue"}
-          </motion.p>
+            <video
+              src="/assets/spyda-website-video-final.mp4"
+              className="aspect-video w-full rounded-xl object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              preload="metadata"
+            />
+          </motion.div>
         </div>
       </div>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Examples (Carousel)                                                */
+/* ------------------------------------------------------------------ */
 
 function Examples() {
   const [active, setActive] = useState<(typeof examples)[number] | null>(null);
@@ -968,55 +575,133 @@ function Examples() {
   );
 }
 
-function Story() {
+/* ------------------------------------------------------------------ */
+/*  How It Works (replaces Story)                                      */
+/* ------------------------------------------------------------------ */
+
+const howItWorksSteps = [
+  {
+    step: "01",
+    color: "#F9C80E",
+    title: "Pick your tier & pay",
+    description: "Choose Starter, Creator, or Studio. Pay securely via Paystack in Naira or USD.",
+    icon: "💳",
+  },
+  {
+    step: "02",
+    color: "#FF6A2A",
+    title: "Get your coupon code",
+    description: "A unique SPYDA-XXXX-XXXX code is generated instantly and delivered to your email and WhatsApp.",
+    icon: "🎟️",
+  },
+  {
+    step: "03",
+    color: "#E91EAE",
+    title: "Redeem in Spyda",
+    description: "Enter the code on Spyda's funding page. Credits land in your wallet in seconds.",
+    icon: "🔓",
+  },
+  {
+    step: "04",
+    color: "#B05CFF",
+    title: "Create & earn",
+    description: "Spend credits on AI generations. For every 1,000 credits spent, earn 1 SPYDA pre-launch token.",
+    icon: "✨",
+  },
+];
+
+function HowItWorks() {
   return (
-    <section className="section-pad">
-      <div className="container-shell grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-        <Reveal>
-          <p className="mb-4 font-display text-xs font-bold uppercase tracking-[0.24em] text-yellow">Why this exists</p>
-          <h2 className="font-display text-4xl font-bold leading-[1.03] tracking-[-0.05em] md:text-6xl">
-            Your idea is not the problem.
-            <span className="mt-2 block text-white/25">The translation is.</span>
-          </h2>
-          <div className="mt-8 space-y-5 text-sm leading-7 text-white/55 md:text-base">
-            <p>Most people know what they want. They can see the energy, the colors, the layout—the whole thing.</p>
-            <p>But the moment they have to explain it to AI, the idea gets flattened into something painfully generic.</p>
-            <p className="font-semibold text-white">This system bridges that gap. One prompt. One reference. Professional results.</p>
+    <section id="how-it-works" className="section-pad relative">
+      <div className="absolute left-1/2 top-1/2 -z-10 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink/10 blur-[160px]" />
+      <div className="container-shell">
+        <SectionIntro
+          eyebrow="Simple 4-step flow"
+          title={<>How Spyda <span className="gradient-text">works.</span></>}
+          description="From payment to your first generation in under two minutes."
+        />
+        <div className="mx-auto max-w-4xl">
+          <div className="grid gap-4 md:grid-cols-2">
+            {howItWorksSteps.map((item, index) => (
+              <Reveal key={item.step} delay={index * 0.08}>
+                <motion.div
+                  whileHover={{ y: -5 }}
+                  className="group relative overflow-hidden rounded-[28px] border border-white/[0.08] bg-white/[0.035] p-6 transition-colors hover:bg-white/[0.055] md:p-8"
+                >
+                  {/* Step number watermark */}
+                  <div
+                    className="absolute -right-2 -top-3 font-display text-[100px] font-black leading-none opacity-[0.07]"
+                    style={{ color: item.color }}
+                  >
+                    {item.step}
+                  </div>
+
+                  {/* Connector line (except last) */}
+                  {index < howItWorksSteps.length - 1 && (
+                    <div
+                      className="absolute -bottom-4 left-1/2 hidden h-8 w-px md:block"
+                      style={{ background: `linear-gradient(to bottom, ${item.color}40, transparent)` }}
+                    />
+                  )}
+
+                  <div className="relative">
+                    <div
+                      className="mb-4 grid h-14 w-14 place-items-center rounded-2xl border text-2xl transition-transform group-hover:scale-110"
+                      style={{ borderColor: `${item.color}30`, background: `${item.color}10` }}
+                    >
+                      {item.icon}
+                    </div>
+                    <p
+                      className="text-[10px] font-bold tracking-[0.2em]"
+                      style={{ color: item.color }}
+                    >
+                      STEP {item.step}
+                    </p>
+                    <h3 className="mt-2 font-display text-xl font-bold tracking-[-0.03em] md:text-2xl">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-6 text-white/50">
+                      {item.description}
+                    </p>
+                  </div>
+                </motion.div>
+              </Reveal>
+            ))}
           </div>
-        </Reveal>
-        <Reveal delay={0.12}>
-          <div className="relative mx-auto aspect-square w-full max-w-[520px] overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.035] p-6">
-            <div className="absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-yellow/20 to-pink/20 blur-[50px]" />
-            <motion.div
-              animate={{ rotate: [0, 3, 0] }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute left-[8%] top-[10%] w-[58%] -rotate-6"
-            >
-              <ArtworkCard src="/assets/showcase-data.png" alt="Data subscription flyer example" />
-            </motion.div>
-            <motion.div
-              animate={{ rotate: [5, 1, 5], y: [0, -8, 0] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute bottom-[7%] right-[7%] w-[58%] rotate-3"
-            >
-              <ArtworkCard src="/assets/showcase-charis.png" alt="Premium event flyer example" />
-            </motion.div>
-            <div className="glass absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full px-5 py-3 font-display text-xs font-bold shadow-2xl">
-              Vigency Prompt Engine ✦
+
+          {/* Credit usage info bar */}
+          <Reveal delay={0.3}>
+            <div className="mt-8 flex flex-col items-center gap-4 rounded-[24px] border border-white/[0.08] bg-white/[0.025] p-6 text-center sm:flex-row sm:text-left md:p-8">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-yellow/10 text-xl">
+                ⚡
+              </div>
+              <div>
+                <p className="font-display text-base font-bold">Credit Usage</p>
+                <p className="mt-1 text-sm leading-6 text-white/50">
+                  Each generation costs <span className="font-semibold text-white">20 credits</span> on managed AI, or just{" "}
+                  <span className="font-semibold text-white">5 credits</span> if you bring your own API key.
+                </p>
+              </div>
             </div>
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
       </div>
     </section>
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Access Form Modal (with tier selection)                            */
+/* ------------------------------------------------------------------ */
+
 function AccessFormModal({
   open,
   close,
+  selectedTier,
 }: {
   open: boolean;
   close: () => void;
+  selectedTier: Tier;
 }) {
   const [checkoutError, setCheckoutError] = useState("");
   const [isStartingCheckout, setIsStartingCheckout] = useState(false);
@@ -1048,6 +733,7 @@ function AccessFormModal({
       email: String(formData.get("email") || ""),
       whatsapp: String(formData.get("whatsapp") || ""),
       whatsappConsent: formData.get("whatsappConsent") === "on",
+      tier: selectedTier.key,
     };
 
     try {
@@ -1112,17 +798,23 @@ function AccessFormModal({
               <div className="mb-6 flex h-12 w-[138px] items-center overflow-hidden rounded-2xl border border-white/10 bg-black/35 px-2">
                 <Logo className="h-9 w-[120px]" />
               </div>
+
+              {/* Selected tier badge */}
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-yellow/20 bg-yellow/[0.08] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-yellow">
+                {selectedTier.label} — {selectedTier.credits.toLocaleString()} credits
+              </div>
+
               <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-yellow">
-                Secure your access
+                Secure checkout
               </p>
               <h3
                 id="access-form-title"
                 className="mt-3 max-w-sm font-display text-3xl font-bold leading-[1.05] tracking-[-0.045em] md:text-4xl"
               >
-                You’re one step away.
+                Fund your Spyda wallet.
               </h3>
               <p className="mt-3 text-sm leading-6 text-white/50">
-                Enter your details below to continue to the secure ₦10,000 checkout.
+                Enter your details below to continue to the secure {selectedTier.priceNGN} checkout and receive your coupon code.
               </p>
 
               <form onSubmit={handleSubmit} className="mt-7 space-y-4">
@@ -1179,9 +871,9 @@ function AccessFormModal({
                     className="mt-0.5 h-4 w-4 shrink-0 accent-yellow"
                   />
                   <span className="text-[10px] leading-5 text-white/45">
-                    I agree to receive my purchase confirmation, access details,
-                    promo code, and relevant Vigency or Zero Club offers on
-                    WhatsApp. I can opt out later.
+                    I agree to receive my Spyda coupon code, purchase confirmation,
+                    and relevant Vigency or Zero Club offers on WhatsApp. I can
+                    opt out later.
                   </span>
                 </label>
 
@@ -1203,14 +895,14 @@ function AccessFormModal({
                   whileTap={{ scale: 0.98 }}
                   className="mt-2 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#F9C80E_0%,#FF6A2A_45%,#E91EAE_100%)] px-6 font-display text-base font-bold shadow-[0_15px_50px_rgba(233,30,174,.28)] disabled:cursor-wait disabled:opacity-60"
                 >
-                  {isStartingCheckout ? "Opening Paystack…" : "Pay ₦10,000"}{" "}
+                  {isStartingCheckout ? "Opening Paystack…" : `Pay ${selectedTier.priceNGN}`}{" "}
                   {!isStartingCheckout && <ArrowIcon />}
                 </motion.button>
 
                 <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 pt-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-white/30">
                   <span>◉ Secure payment</span>
-                  <span>⚡ Instant access</span>
-                  <span>✓ Lifetime updates</span>
+                  <span>⚡ Instant coupon code</span>
+                  <span>✓ Single-use guarantee</span>
                 </div>
               </form>
             </div>
@@ -1221,71 +913,128 @@ function AccessFormModal({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Offer / Pricing (3-tier grid)                                      */
+/* ------------------------------------------------------------------ */
+
 function Offer() {
   const [accessFormOpen, setAccessFormOpen] = useState(false);
-  const features = ["Prompt System", "Reference Framework", "Commercial Usage", "Lifetime Access", "Future Updates"];
+  const [selectedTier, setSelectedTier] = useState<Tier>(tiers[1]); // default to Creator
+
+  const openCheckout = (tier: Tier) => {
+    setSelectedTier(tier);
+    setAccessFormOpen(true);
+  };
+
   return (
     <>
-      <section id="offer" className="section-pad relative">
+      <section id="pricing" className="section-pad relative">
         <div className="container-shell">
+          <SectionIntro
+            eyebrow="Pick your tier"
+            title={<>Get your <span className="gradient-text">Spyda Credits.</span></>}
+            description="Three tiers. Pick what fits your workflow. Pay once, get your coupon code instantly."
+          />
           <Reveal>
-            <div className="gradient-border relative overflow-hidden rounded-[36px] p-5 shadow-[0_40px_140px_rgba(233,30,174,.13)] md:p-10 lg:p-14">
-            <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full bg-pink/20 blur-[90px]" />
-            <div className="absolute -bottom-28 left-1/4 h-72 w-72 rounded-full bg-yellow/10 blur-[90px]" />
-            <div className="relative grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
-              <div>
-                <div className="mb-5 inline-flex rounded-full border border-yellow/20 bg-yellow/[0.08] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.2em] text-yellow">
-                  90% launch offer
-                </div>
-                <h2 className="font-display text-4xl font-bold tracking-[-0.05em] md:text-6xl">Get access today.</h2>
-                <p className="mt-5 max-w-lg text-sm leading-7 text-white/55">
-                  Build a repeatable creative advantage—not another tool you forget after one week.
-                </p>
-                <div className="mt-8 grid gap-3 sm:grid-cols-2">
-                  {features.map((feature) => (
-                    <div key={feature} className="flex items-center gap-3 text-sm font-semibold text-white/75">
-                      <CheckIcon /> {feature}
+            <div className="mx-auto grid max-w-5xl gap-4 md:grid-cols-3">
+              {tiers.map((tier) => {
+                const isPopular = tier.popular;
+                return (
+                  <motion.div
+                    key={tier.key}
+                    whileHover={{ y: -8 }}
+                    className={`relative overflow-hidden rounded-[30px] border p-6 md:p-8 ${
+                      isPopular
+                        ? "border-yellow/40 bg-white/[0.06] shadow-[0_30px_100px_rgba(249,200,14,.12)]"
+                        : "border-white/[0.08] bg-white/[0.035]"
+                    }`}
+                  >
+                    {/* Popular badge */}
+                    {isPopular && (
+                      <div className="absolute right-4 top-4 rounded-full bg-yellow px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-black">
+                        Most popular
+                      </div>
+                    )}
+
+                    {/* Bonus badge */}
+                    {tier.badge && (
+                      <div className="absolute right-4 top-4 rounded-full bg-pink/20 px-3 py-1 text-[9px] font-bold uppercase tracking-wider text-pink">
+                        {tier.badge}
+                      </div>
+                    )}
+
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
+                      {tier.label}
+                    </p>
+
+                    {/* Credits */}
+                    <p className="mt-4 font-display text-5xl font-extrabold tracking-[-0.06em] md:text-6xl">
+                      {tier.credits.toLocaleString()}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold text-white/40">Spyda Credits</p>
+
+                    <div className="my-5 h-px bg-white/[0.08]" />
+
+                    {/* Price */}
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-display text-3xl font-bold tracking-tight">{tier.priceNGN}</span>
+                      <span className="text-xs text-white/35">{tier.priceUSD}</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-              <div className="rounded-[28px] border border-white/10 bg-black/45 p-6 backdrop-blur-md md:p-8">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <p className="text-xs text-white/35">Regular access</p>
-                    <p className="mt-1 font-display text-2xl font-bold text-white/30 line-through">₦100,000</p>
-                  </div>
-                  <span className="rounded-full bg-pink/15 px-3 py-1.5 text-[10px] font-bold text-pink">SAVE ₦90,000</span>
-                </div>
-                <div className="my-6 h-px bg-white/10" />
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/40">Pay once</p>
-                <p className="mt-2 font-display text-6xl font-extrabold tracking-[-0.07em] md:text-7xl">₦10,000</p>
-                <motion.button
-                  type="button"
-                  onClick={() => setAccessFormOpen(true)}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="mt-7 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#F9C80E_0%,#FF6A2A_45%,#E91EAE_100%)] px-6 font-display text-base font-bold shadow-[0_14px_50px_rgba(233,30,174,.28)]"
-                >
-                  Claim My Access <ArrowIcon />
-                </motion.button>
-                <div className="mt-5 flex flex-wrap justify-center gap-x-5 gap-y-2 text-[9px] font-semibold uppercase tracking-wider text-white/35">
-                  <span>◉ Secure checkout</span>
-                  <span>⚡ Instant access</span>
-                </div>
-              </div>
+
+                    {/* Features */}
+                    <div className="mt-5 space-y-2.5">
+                      {[
+                        `${tier.credits.toLocaleString()} credits to your wallet`,
+                        "Unique SPYDA-XXXX-XXXX code",
+                        "Single-use, secure & instant",
+                        "Earn SPYDA tokens on spend",
+                      ].map((feature) => (
+                        <div key={feature} className="flex items-center gap-2.5 text-sm text-white/60">
+                          <CheckIcon /> {feature}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* CTA */}
+                    <motion.button
+                      type="button"
+                      onClick={() => openCheckout(tier)}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`mt-7 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full px-6 font-display text-sm font-bold ${
+                        isPopular
+                          ? "bg-[linear-gradient(135deg,#F9C80E_0%,#FF6A2A_45%,#E91EAE_100%)] shadow-[0_14px_50px_rgba(233,30,174,.28)]"
+                          : "border border-white/15 bg-white/[0.06] transition-colors hover:bg-white/[0.1]"
+                      }`}
+                    >
+                      Buy {tier.label} <ArrowIcon />
+                    </motion.button>
+                  </motion.div>
+                );
+              })}
             </div>
-            </div>
+          </Reveal>
+
+          {/* Rate info */}
+          <Reveal delay={0.15}>
+            <p className="mt-8 text-center text-xs text-white/30">
+              Base rate: $1 = 100 credits · NGN rate: ₦1,500 = $1 · Studio tier includes a 300-credit bonus
+            </p>
           </Reveal>
         </div>
       </section>
       <AccessFormModal
         open={accessFormOpen}
         close={() => setAccessFormOpen(false)}
+        selectedTier={selectedTier}
       />
     </>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Social Proof                                                       */
+/* ------------------------------------------------------------------ */
 
 function SocialProof() {
   const peopleByRole = {
@@ -1297,12 +1046,12 @@ function SocialProof() {
   return (
     <section className="pb-10">
       <div className="container-shell">
-        <p className="mb-6 text-center text-[9px] font-bold uppercase tracking-[0.24em] text-white/25">Built for people who ship ideas</p>
+        <p className="mb-6 text-center text-[9px] font-bold uppercase tracking-[0.24em] text-white/25">People who use Spyda Credits</p>
         <div className="grid gap-3 md:grid-cols-3">
           {[
-            ["“I finally got the exact visual direction I had in mind.”", "Creative founder"],
-            ["“It turns a rough idea into something the AI can actually use.”", "Social media manager"],
-            ["“The reference framework alone changed my output quality.”", "Brand designer"],
+            ["\u201CSpyda credits made my design workflow ten times faster. Just fund and create.\u201D", "Creative founder"],
+            ["\u201CThe coupon code system is seamless — I paid and had credits in my wallet within a minute.\u201D", "Social media manager"],
+            ["\u201CThe Studio tier bonus is a no-brainer. 2,800 credits for ₦25k is incredible value.\u201D", "Brand designer"],
           ].map(([quote, role], i) => {
             const person = peopleByRole[role as keyof typeof peopleByRole];
 
@@ -1324,6 +1073,10 @@ function SocialProof() {
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  FAQ                                                                */
+/* ------------------------------------------------------------------ */
 
 function FAQ() {
   const [open, setOpen] = useState(0);
@@ -1366,29 +1119,33 @@ function FAQ() {
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Final CTA                                                          */
+/* ------------------------------------------------------------------ */
+
 function FinalCTA() {
   return (
     <section className="relative overflow-hidden py-24 md:py-36">
       <div className="absolute inset-x-[15%] bottom-[-45%] -z-10 h-[600px] rounded-full bg-[linear-gradient(90deg,#F9C80E,#E91EAE)] opacity-25 blur-[150px]" />
       <div className="container-shell text-center">
         <Reveal>
-          <p className="mb-5 font-display text-xs font-bold uppercase tracking-[0.24em] text-yellow">Your next graphic starts here</p>
+          <p className="mb-5 font-display text-xs font-bold uppercase tracking-[0.24em] text-yellow">Your next design starts here</p>
           <h2 className="mx-auto max-w-5xl font-display text-[clamp(3rem,9vw,7rem)] font-extrabold leading-[0.9] tracking-[-0.07em]">
-            Start creating better graphics today.
+            Fund your Spyda wallet today.
           </h2>
           <p className="mx-auto mt-6 max-w-xl text-sm leading-7 text-white/55">
-            Stop settling for generic. Give your ideas the language they deserve.
+            Pick your tier. Get your coupon code. Start creating professional designs with Spyda.
           </p>
-          <CtaButton className="mt-8 min-h-14 px-8 text-base">Get Instant Access → ₦10,000</CtaButton>
-          <div className="mt-10 flex flex-col items-center gap-3">
-            <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/30">Launch offer closes in</p>
-            <Countdown />
-          </div>
+          <CtaButton className="mt-8 min-h-14 px-8 text-base" href="#pricing">Buy Spyda Credits → from ₦7,000</CtaButton>
         </Reveal>
       </div>
     </section>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Exit Intent Modal                                                  */
+/* ------------------------------------------------------------------ */
 
 function ExitModal({ open, close }: { open: boolean; close: () => void }) {
   return (
@@ -1411,16 +1168,20 @@ function ExitModal({ open, close }: { open: boolean; close: () => void }) {
             <button onClick={close} aria-label="Close offer" className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border border-white/10 text-white/50">×</button>
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-yellow/10 text-2xl">✦</div>
             <p className="mt-5 text-[9px] font-bold uppercase tracking-[0.22em] text-yellow">Wait—before you go</p>
-            <h3 className="mt-3 font-display text-3xl font-bold tracking-[-0.045em]">Keep ₦90,000 in your pocket.</h3>
-            <p className="mt-3 text-sm leading-6 text-white/50">Claim the 90% launch price before access returns to ₦100,000.</p>
-            <CtaButton className="mt-6 w-full" onClick={close}>Get Access for ₦10,000 <ArrowIcon /></CtaButton>
-            <button onClick={close} className="mt-4 text-[10px] font-semibold text-white/30">No thanks, I’ll pass on the offer</button>
+            <h3 className="mt-3 font-display text-3xl font-bold tracking-[-0.045em]">Don&apos;t miss your Spyda Credits.</h3>
+            <p className="mt-3 text-sm leading-6 text-white/50">Fund your Spyda wallet starting from just ₦7,000 and get creating.</p>
+            <CtaButton className="mt-6 w-full" href="#pricing" onClick={close}>Buy Spyda Credits <ArrowIcon /></CtaButton>
+            <button onClick={close} className="mt-4 text-[10px] font-semibold text-white/30">No thanks, I&apos;ll pass</button>
           </motion.div>
         </motion.div>
       )}
     </AnimatePresence>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/*  Main Export                                                        */
+/* ------------------------------------------------------------------ */
 
 export function LandingPage() {
   const { scrollYProgress } = useScroll();
@@ -1447,7 +1208,7 @@ export function LandingPage() {
       <Inside />
       <Transformation />
       <Examples />
-      <Story />
+      <HowItWorks />
       <Offer />
       <SocialProof />
       <FAQ />
@@ -1460,10 +1221,10 @@ export function LandingPage() {
       </footer>
       <div className="glass fixed bottom-3 left-3 right-3 z-30 flex items-center justify-between rounded-2xl p-2 pl-4 md:hidden">
         <div>
-          <p className="text-[8px] font-bold uppercase tracking-wider text-white/35">90% off · ends July 5th</p>
-          <p className="mt-0.5 font-display text-sm font-bold"><span className="mr-1 text-white/25 line-through">₦100k</span> ₦10,000</p>
+          <p className="text-[8px] font-bold uppercase tracking-wider text-white/35">Spyda Credits</p>
+          <p className="mt-0.5 font-display text-sm font-bold">From ₦7,000</p>
         </div>
-        <CtaButton className="min-h-11 px-5 text-xs">Get Access <ArrowIcon /></CtaButton>
+        <CtaButton className="min-h-11 px-5 text-xs" href="#pricing">Buy Credits <ArrowIcon /></CtaButton>
       </div>
       <ExitModal open={exitOpen} close={() => setExitOpen(false)} />
     </main>

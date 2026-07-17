@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import type { ReactNode } from "react";
 
 export const checkoutUrl =
-  process.env.NEXT_PUBLIC_CHECKOUT_URL || "#offer";
+  process.env.NEXT_PUBLIC_CHECKOUT_URL || "#pricing";
 
 export function Logo({ className = "" }: { className?: string }) {
   return (

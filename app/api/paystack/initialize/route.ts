@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import {
-  createPromoCode,
+  createCouponCode,
+  isValidTier,
   normalizeWhatsAppNumber,
-  PRODUCT_AMOUNT_KOBO,
+  saveCheckoutLeadToSheet,
+  TIERS,
+  type TierKey,
 } from "@/lib/checkout";
 
 export const runtime = "nodejs";
@@ -22,6 +25,7 @@ export async function POST(request: Request) {
       email?: string;
       whatsapp?: string;
       whatsappConsent?: boolean;
+      tier?: string;
     };
 
     const fullName = body.fullName?.trim();
@@ -49,9 +53,19 @@ export async function POST(request: Request) {
       );
     }
 
+    if (!body.tier || !isValidTier(body.tier)) {
+      return NextResponse.json(
+        { error: "Select a valid tier." },
+        { status: 400 },
+      );
+    }
+
+    const tier = body.tier as TierKey;
+    const selectedTier = TIERS[tier];
+
     const origin =
       process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
-    const promoCode = createPromoCode();
+    const couponCode = createCouponCode();
 
     const paystackResponse = await fetch(
       "https://api.paystack.co/transaction/initialize",
@@ -63,15 +77,17 @@ export async function POST(request: Request) {
         },
         body: JSON.stringify({
           email,
-          amount: PRODUCT_AMOUNT_KOBO,
+          amount: selectedTier.amountKobo,
           currency: "NGN",
           callback_url: `${origin}/success`,
           metadata: {
             full_name: fullName,
             whatsapp,
             whatsapp_consent: true,
-            promo_code: promoCode,
-            product: "Vigency AI Prompt System",
+            coupon_code: couponCode,
+            product: `Spyda Credits — ${selectedTier.label}`,
+            tier,
+            credit_amount: selectedTier.credits,
           },
         }),
       },
@@ -88,6 +104,22 @@ export async function POST(request: Request) {
         { error: result.message || "Could not start the secure checkout." },
         { status: 502 },
       );
+    }
+
+    try {
+      await saveCheckoutLeadToSheet({
+        fullName,
+        email,
+        whatsapp,
+        status: "Started Checkout",
+        reference: result.data.reference,
+        promoCode: couponCode,
+        amount: (selectedTier.amountKobo / 100).toString(),
+        tier,
+        credits: selectedTier.credits,
+      });
+    } catch (error) {
+      console.error("Google Sheets lead save failed", error);
     }
 
     return NextResponse.json({

@@ -15,13 +15,13 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Vigency AI Prompt System — Create Any Graphic Design",
+  title: "Vigency — Buy Spyda Credits | Fund Your AI Wallet",
   description:
-    "Create professional flyers, social creatives, promo banners and more with one prompt and a reference.",
+    "Buy Spyda Credits instantly. Pick your tier, pay securely, and receive a single-use coupon code to fund your Spyda Wallet for AI-powered generations.",
   metadataBase: new URL("https://vigency.co"),
   openGraph: {
-    title: "Create Any Graphic Design With One Prompt",
-    description: "The premium AI prompt system for production-ready visuals.",
+    title: "Buy Spyda Credits — Fund Your AI Wallet",
+    description: "Pick your tier. Pay securely. Get a single-use Spyda coupon code. Power your AI generations.",
     images: ["/assets/design-collage.png"],
   },
 };
