@@ -7,6 +7,7 @@ import {
   Eye, EyeOff, Lock, RefreshCw, TrendingUp, 
   CreditCard, Ticket, Gift, Copy 
 } from 'lucide-react';
+import { Logo } from '@/components/ui';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -124,10 +125,7 @@ export default function AdminPage() {
           
           <div className="relative bg-[#111111] border border-white/[0.06] rounded-2xl p-8 backdrop-blur-xl shadow-[0_18px_80px_rgba(233,30,174,.1)]">
             <div className="flex flex-col items-center mb-8">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#f9c80e] via-[#ff6a2a] to-[#e91eae] flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(255,106,42,0.3)]">
-                <span className="text-white text-3xl font-display font-bold">V</span>
-              </div>
-              <h1 className="text-2xl font-display font-bold text-white tracking-tight">Vigency Admin</h1>
+              <Logo className="w-40 mb-2" />
               <p className="text-white/50 text-sm mt-1">Sign in to access dashboard</p>
             </div>
 
@@ -494,10 +492,8 @@ export default function AdminPage() {
       <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl border-b border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#f9c80e] via-[#ff6a2a] to-[#e91eae] flex items-center justify-center shadow-[0_0_15px_rgba(255,106,42,0.3)]">
-              <span className="text-white text-sm font-display font-bold">V</span>
-            </div>
-            <span className="font-display font-bold text-lg tracking-tight">Vigency Admin</span>
+            <Logo className="scale-90 origin-left" />
+            <span className="font-display font-bold text-sm uppercase tracking-widest text-white/40">Admin</span>
           </div>
           
           <button 
