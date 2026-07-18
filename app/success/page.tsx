@@ -69,6 +69,9 @@ export default function SuccessPage() {
                 {copied ? "Copied!" : "Copy Link"}
               </button>
             </div>
+            <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-orange flex justify-center items-center gap-1.5 bg-orange/10 border border-orange/20 rounded-lg py-2">
+              ⚠️ Keep this safe! This is the only time it will be shown.
+            </p>
           </div>
         )}
 
