@@ -1,10 +1,57 @@
 import crypto from "node:crypto";
 
-export const PRODUCT_AMOUNT_KOBO = 1_000_000;
-export const PRODUCT_CURRENCY = "NGN";
+export const TIERS = {
+  starter: { amountKobo: 700_000, credits: 500, label: "Starter", priceNGN: "₦7,000", priceUSD: "$5" },
+  creator: { amountKobo: 1_300_000, credits: 1_000, label: "Creator", priceNGN: "₦13,000", priceUSD: "$10" },
+  studio:  { amountKobo: 2_500_000, credits: 2_800, label: "Studio", priceNGN: "₦25,000", priceUSD: "$25" },
+} as const;
 
-export function createPromoCode() {
-  return crypto.randomInt(100_000, 1_000_000).toString();
+export type TierKey = keyof typeof TIERS;
+
+const VALID_TIER_KEYS = new Set<string>(Object.keys(TIERS));
+
+export function isValidTier(tier: string): tier is TierKey {
+  return VALID_TIER_KEYS.has(tier);
+}
+
+export async function sendAdminWhatsAppAlert({
+  fullName, email, whatsapp, tier, credits, amountNGN, couponCode
+}: {
+  fullName: string; email: string; whatsapp: string;
+  tier: string; credits: number; amountNGN: number; couponCode: string;
+}): Promise<void> {
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  const adminNumber = process.env.ADMIN_WHATSAPP_NUMBER;
+  const apiVersion = process.env.WHATSAPP_API_VERSION || 'v23.0';
+  
+  if (!token || !phoneNumberId || !adminNumber) return;
+  
+  const message = [
+    '💰 New Spyda Payment!',
+    '━━━━━━━━━━━━━━━',
+    `👤 ${fullName}`,
+    `📧 ${email}`,
+    `📱 ${whatsapp}`,
+    `🎯 Tier: ${tier} (${credits.toLocaleString()} credits)`,
+    `💵 ₦${amountNGN.toLocaleString()}`,
+    `🎟️ Code: ${couponCode}`,
+    '━━━━━━━━━━━━━━━',
+  ].join('\n');
+  
+  await fetch(`https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      messaging_product: 'whatsapp',
+      to: adminNumber,
+      type: 'text',
+      text: { body: message },
+    }),
+  });
 }
 
 export function normalizeWhatsAppNumber(value: string) {
@@ -48,6 +95,8 @@ export async function saveCheckoutLeadToSheet({
   reference,
   promoCode,
   amount = "10000",
+  tier,
+  credits,
 }: {
   fullName: string;
   email?: string;
@@ -56,6 +105,8 @@ export async function saveCheckoutLeadToSheet({
   reference?: string;
   promoCode: string;
   amount?: string;
+  tier?: string;
+  credits?: number;
 }) {
   const sheetsUrl = process.env.GOOGLE_SHEETS_WEB_APP_URL;
   if (!sheetsUrl) return;
@@ -73,6 +124,8 @@ export async function saveCheckoutLeadToSheet({
       reference: reference || "",
       promoCode,
       amount,
+      tier: tier || "",
+      credits: credits ?? "",
     }),
   });
 

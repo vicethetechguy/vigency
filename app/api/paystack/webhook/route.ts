@@ -1,16 +1,26 @@
 import { NextResponse } from "next/server";
 import {
   hasWhatsAppPaymentConfig,
-  PRODUCT_AMOUNT_KOBO,
-  PRODUCT_CURRENCY,
   saveCheckoutLeadToSheet,
   sendWhatsAppPaymentTemplate,
+  sendAdminWhatsAppAlert,
+  TIERS,
+  type TierKey,
   verifyPaystackSignature,
 } from "@/lib/checkout";
 import {
   claimPaymentReference,
   releasePaymentReference,
 } from "@/lib/webhook-dedup";
+import { generateSpydaCoupon } from "@/lib/spyda";
+import { storePayment } from "@/lib/redis";
+import {
+  lookupReferrer,
+  incrementReferralCount,
+  markReferralRewardEarned,
+  registerReferralCode,
+  generateReferralCode,
+} from "@/lib/referrals";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,11 +39,15 @@ type PaystackChargeEvent = {
       full_name?: string;
       whatsapp?: string;
       whatsapp_consent?: boolean;
-      promo_code?: string;
+      referral_code?: string;
       product?: string;
+      tier?: string;
+      credit_amount?: number;
     };
   };
 };
+
+const validAmounts = new Set<number>(Object.values(TIERS).map((t) => t.amountKobo));
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
@@ -54,14 +68,13 @@ export async function POST(request: Request) {
 
   if (
     transaction?.status !== "success" ||
-    transaction.amount !== PRODUCT_AMOUNT_KOBO ||
-    transaction.currency !== PRODUCT_CURRENCY ||
-    metadata?.product !== "Vigency AI Prompt System" ||
+    !validAmounts.has(transaction.amount!) ||
+    transaction.currency !== "NGN" ||
+    !metadata?.product?.startsWith("Spyda Credits") ||
     metadata.whatsapp_consent !== true ||
     !transaction.reference ||
     !metadata.full_name ||
-    !metadata.whatsapp ||
-    !metadata.promo_code
+    !metadata.whatsapp
   ) {
     return NextResponse.json(
       { error: "Transaction validation failed." },
@@ -69,9 +82,20 @@ export async function POST(request: Request) {
     );
   }
 
+  const tier = metadata.tier;
+  const creditAmount = metadata.credit_amount;
+
   const claimed = await claimPaymentReference(transaction.reference);
   if (!claimed) {
     return NextResponse.json({ received: true, duplicate: true });
+  }
+
+  let couponCode = "PENDING";
+  try {
+    const coupon = await generateSpydaCoupon(creditAmount as 500 | 1000 | 2800);
+    couponCode = coupon.code;
+  } catch (error) {
+    console.error("Spyda coupon generation failed", error);
   }
 
   try {
@@ -81,15 +105,29 @@ export async function POST(request: Request) {
       whatsapp: metadata.whatsapp,
       status: "Paid",
       reference: transaction.reference,
-      promoCode: metadata.promo_code,
+      promoCode: couponCode,
+      tier,
+      credits: creditAmount,
     });
   } catch (error) {
-    await releasePaymentReference(transaction.reference);
     console.error("Google Sheets paid save failed", error);
-    return NextResponse.json(
-      { error: "Payment record save failed." },
-      { status: 500 },
-    );
+  }
+
+  try {
+    await storePayment({
+      reference: transaction.reference,
+      fullName: metadata.full_name,
+      email: transaction.customer?.email || "",
+      whatsapp: metadata.whatsapp,
+      tier: tier || "unknown",
+      credits: creditAmount || 0,
+      amountNGN: transaction.amount! / 100,
+      couponCode,
+      referralCode: metadata.referral_code,
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error("Redis store payment failed", error);
   }
 
   if (hasWhatsAppPaymentConfig()) {
@@ -97,11 +135,54 @@ export async function POST(request: Request) {
       await sendWhatsAppPaymentTemplate({
         fullName: metadata.full_name,
         whatsapp: metadata.whatsapp,
-        promoCode: metadata.promo_code,
+        promoCode: couponCode,
       });
     } catch (error) {
       console.error("WhatsApp payment message failed", error);
     }
+  }
+
+  try {
+    await sendAdminWhatsAppAlert({
+      fullName: metadata.full_name,
+      email: transaction.customer?.email || "",
+      whatsapp: metadata.whatsapp,
+      tier: tier || "unknown",
+      credits: creditAmount || 0,
+      amountNGN: transaction.amount! / 100,
+      couponCode,
+    });
+  } catch (error) {
+    console.error("Admin WhatsApp alert failed", error);
+  }
+
+  try {
+    if (metadata.referral_code) {
+      const referrerWhatsapp = await lookupReferrer(metadata.referral_code);
+      if (referrerWhatsapp) {
+        const count = await incrementReferralCount(referrerWhatsapp);
+        if (count === 10) {
+          const bonusCoupon = await generateSpydaCoupon(1000);
+          await markReferralRewardEarned(referrerWhatsapp);
+          if (hasWhatsAppPaymentConfig()) {
+            await sendWhatsAppPaymentTemplate({
+              fullName: "Partner",
+              whatsapp: referrerWhatsapp,
+              promoCode: bonusCoupon.code,
+            });
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Referral processing failed", error);
+  }
+
+  try {
+    const newRefCode = generateReferralCode(metadata.whatsapp);
+    await registerReferralCode(newRefCode, metadata.whatsapp);
+  } catch (error) {
+    console.error("Referral code registration failed", error);
   }
 
   return NextResponse.json({ received: true });
