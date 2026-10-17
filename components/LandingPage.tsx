@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowUpRight, ArrowRight, Code2, PenTool, BarChart3, Megaphone, Sparkles, Check, Menu, X, Plus, Minus, GraduationCap, Users, Layers, Globe } from "lucide-react";
 import { Logo } from "./ui";
 
@@ -19,10 +19,35 @@ const questions = [
   ["Can I learn alongside my studies?", "Start with a manageable learning routine and build from there. Join the community to ask about upcoming learning opportunities, schedules, and the tools you will need."],
   ["How do I join, and what does it cost?", "Use the Join the community button to connect with Vigency on WhatsApp. Ask about available programmes, fees, schedules, and entry requirements before enrolling. Programme details will be shared when confirmed."],
 ];
+/** Fades content in as it scrolls into view. Skipped entirely when the visitor prefers reduced motion. */
+function useScrollReveal() {
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
+    const targets = document.querySelectorAll<HTMLElement>(
+      ".learning-site section > .learn-container > *, .learning-site section.learn-container > *"
+    );
+    const observer = new IntersectionObserver(
+      (entries) => entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      }),
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+    );
+    targets.forEach((el) => {
+      if (el.getBoundingClientRect().top < window.innerHeight) return; // already on screen: leave it alone
+      el.classList.add("reveal");
+      observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, []);
+}
 function Button({ children, href = "#programmes", secondary = false }: { children: React.ReactNode; href?: string; secondary?: boolean }) {
   return <a className={`learn-button ${secondary ? "secondary" : ""}`} href={href} {...(href.startsWith("https") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{children}<ArrowUpRight size={17} /></a>;
 }
 export function LandingPage() {
+  useScrollReveal();
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [filter, setFilter] = useState("All skills");

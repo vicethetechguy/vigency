@@ -1,11 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import type { ReactNode } from "react";
 
 export const checkoutUrl =
   process.env.NEXT_PUBLIC_CHECKOUT_URL || "#pricing";
+
+/** Respects the visitor's reduced-motion setting for every framer-motion animation. */
+export function MotionProvider({ children }: { children: ReactNode }) {
+  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
+}
 
 export function Logo({ className = "" }: { className?: string }) {
   return (
@@ -44,7 +49,7 @@ export function ArrowIcon() {
 
 export function CheckIcon() {
   return (
-    <span className="grid h-5 w-5 place-items-center rounded-full bg-yellow/15 text-[11px] font-black text-yellow">
+    <span className="grid h-5 w-5 place-items-center rounded-full bg-accent/15 text-[11px] font-bold text-accent">
       ✓
     </span>
   );
@@ -65,9 +70,8 @@ export function CtaButton({
     <motion.a
       href={href}
       onClick={onClick}
-      whileHover={{ scale: 1.03 }}
-      whileTap={{ scale: 0.98 }}
-      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,#F9C80E_0%,#FF6A2A_45%,#E91EAE_100%)] px-6 font-display text-sm font-bold text-white shadow-[0_14px_50px_rgba(233,30,174,.28)] transition-shadow hover:shadow-[0_18px_65px_rgba(233,30,174,.4)] ${className}`}
+      whileTap={{ scale: 0.97 }}
+      className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-black transition-colors hover:bg-white/90 ${className}`}
     >
       {children}
     </motion.a>
@@ -85,7 +89,7 @@ export function Reveal({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 28 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
@@ -115,10 +119,10 @@ export function SectionIntro({
           : "mb-10 max-w-2xl text-left"
       }
     >
-      <p className="mb-4 font-display text-xs font-bold uppercase tracking-[0.24em] text-yellow">
+      <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
         {eyebrow}
       </p>
-      <h2 className="font-display text-4xl font-bold leading-[1.02] tracking-[-0.045em] md:text-6xl">
+      <h2 className="text-balance font-display text-4xl font-bold leading-[1.05] tracking-[-0.03em] md:text-6xl">
         {title}
       </h2>
       {description && (

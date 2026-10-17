@@ -47,20 +47,20 @@ export default function SuccessPage() {
   return (
     <main className="relative grid min-h-screen place-items-center overflow-hidden bg-ink p-5 text-white">
       <div className="absolute left-1/2 top-1/2 h-[520px] w-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink/15 blur-[140px]" />
-      <div className="relative w-full max-w-lg rounded-[34px] border border-white/10 bg-white/[0.04] p-7 text-center backdrop-blur-xl md:p-12">
+      <div className="relative w-full max-w-lg rounded-[28px] border border-white/10 bg-white/[0.04] shadow-soft p-7 text-center backdrop-blur-xl md:p-12">
         <Logo className="mx-auto mb-8" />
-        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-yellow text-2xl font-black text-black">✓</div>
-        <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.22em] text-yellow">Payment successful</p>
-        <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.05em]">Payment Successful!</h1>
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-[18px] bg-accent text-2xl font-bold text-white">✓</div>
+        <p className="mt-6 text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">Payment successful</p>
+        <h1 className="mt-3 font-display text-4xl font-bold tracking-[-0.03em]">Payment Successful!</h1>
         <p className="mt-4 text-sm leading-7 text-white/55">Your Spyda coupon code is on the way! Check your email and WhatsApp for your unique SPYDA-XXXX-XXXX code. Redeem it in Spyda to fund your wallet.</p>
         
         {referralLink && (
-          <div className="mt-8 rounded-2xl border border-white/10 bg-black/40 p-5">
+          <div className="mt-8 rounded-[20px] border border-white/10 bg-black/40 p-5">
             <h3 className="font-display text-lg font-bold">Earn Free Credits</h3>
             <p className="mt-2 text-xs leading-5 text-white/50">
-              Share your unique link with 10 friends. When they buy credits, you'll instantly receive a <span className="font-bold text-yellow">1,000 credit bonus</span>!
+              Share your unique link with 10 friends. When they buy credits, you'll instantly receive a <span className="font-semibold text-accent">1,000 credit bonus</span>!
             </p>
-            <div className="mt-4 flex items-center justify-between overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+            <div className="mt-4 flex items-center justify-between overflow-hidden rounded-full border border-white/10 bg-white/[0.03]">
               <span className="truncate pl-4 text-xs text-white/70">{referralLink}</span>
               <button
                 onClick={handleCopy}
@@ -69,7 +69,7 @@ export default function SuccessPage() {
                 {copied ? "Copied!" : "Copy Link"}
               </button>
             </div>
-            <p className="mt-4 text-[10px] font-bold uppercase tracking-wider text-orange flex justify-center items-center gap-1.5 bg-orange/10 border border-orange/20 rounded-lg py-2">
+            <p className="mt-4 text-[11px] font-semibold uppercase tracking-wider text-accent flex justify-center items-center gap-1.5 bg-accent/10 border border-accent/20 rounded-full py-2 px-3">
               ⚠️ Keep this safe! This is the only time it will be shown.
             </p>
           </div>
@@ -79,7 +79,7 @@ export default function SuccessPage() {
           href="https://chat.whatsapp.com/LGvkyQeNYw2AoOI01K1v65?s=cl&p=a&mlu=1"
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-7 inline-flex min-h-12 items-center justify-center rounded-full bg-white px-6 font-display text-sm font-bold text-black"
+          className="mt-7 inline-flex min-h-12 items-center justify-center press rounded-full bg-white px-6 text-sm font-semibold text-black hover:bg-white/90"
         >
           Go to Spyda
         </Link>

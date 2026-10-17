@@ -1,5 +1,10 @@
 import type { Config } from "tailwindcss";
 
+/*
+ * Vigency brand tokens.
+ * Mostly black and white, with one magenta accent.
+ * Fonts read from CSS variables set in app/globals.css (see app/layout.tsx).
+ */
 export default {
   content: [
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,17 +15,24 @@ export default {
       colors: {
         ink: "#050505",
         surface: "#111111",
-        yellow: "#F9C80E",
+        line: "rgba(255,255,255,0.08)",
+        accent: "#E91EAE",
         pink: "#E91EAE",
-        orange: "#FF6A2A",
-        purple: "#B05CFF",
       },
       fontFamily: {
-        display: ["var(--font-space)", "sans-serif"],
-        body: ["var(--font-montserrat)", "sans-serif"],
+        sans: ["var(--font-body)"],
+        body: ["var(--font-body)"],
+        display: ["var(--font-display)"],
+      },
+      borderRadius: {
+        DEFAULT: "20px",
+        brand: "20px",
+        "brand-lg": "28px",
+        "brand-sm": "14px",
       },
       boxShadow: {
-        glow: "0 18px 80px rgba(233,30,174,.22)",
+        soft: "0 1px 0 rgba(255,255,255,.06) inset, 0 12px 40px rgba(0,0,0,.45)",
+        glow: "0 18px 80px rgba(233,30,174,.18)",
       },
     },
   },

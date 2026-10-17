@@ -46,14 +46,14 @@ export default function RewardsPage() {
 
       <div className="relative w-full max-w-md z-10">
         <div className="text-center mb-8">
-          <h1 className="font-display text-4xl font-bold tracking-tight mb-3">Rewards <span className="gradient-text">Tracker</span></h1>
+          <h1 className="font-display text-4xl font-bold tracking-[-0.03em] mb-3">Rewards <span className="gradient-text">Tracker</span></h1>
           <p className="text-sm text-white/50">Enter your referral code to see your progress toward your 1,000 Spyda credits bonus.</p>
         </div>
 
-        <div className="gradient-border relative rounded-[24px] p-6 shadow-[0_35px_100px_rgba(233,30,174,.15)] backdrop-blur-xl bg-black/40">
+        <div className="gradient-border relative rounded-[20px] p-6 shadow-soft backdrop-blur-xl">
           <form onSubmit={checkStats} className="space-y-4">
             <div>
-              <label className="block text-[10px] font-bold uppercase tracking-[0.16em] text-white/40 mb-2">
+              <label className="block text-[11px] font-semibold uppercase tracking-[0.14em] text-white/50 mb-2">
                 Your Referral Code
               </label>
               <div className="relative">
@@ -63,13 +63,13 @@ export default function RewardsPage() {
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder="e.g. A1B2C3D4"
                   maxLength={8}
-                  className="h-14 w-full rounded-2xl border border-white/10 bg-white/[0.045] px-4 text-sm font-bold tracking-[0.2em] text-white outline-none transition placeholder:text-white/20 placeholder:font-medium placeholder:tracking-normal focus:border-yellow/50 focus:bg-white/[0.065]"
+                  className="h-14 w-full rounded-full border border-white/10 bg-white/[0.045] px-5 text-sm font-semibold tracking-[0.2em] text-white outline-none transition placeholder:text-white/20 placeholder:font-medium placeholder:tracking-normal focus:border-accent/60 focus:bg-white/[0.065]"
                 />
               </div>
             </div>
 
             {error && (
-              <p className="text-xs text-orange bg-orange/10 border border-orange/20 rounded-xl p-3">
+              <p className="text-xs text-accent bg-accent/10 border border-accent/20 rounded-[14px] p-3">
                 {error}
               </p>
             )}
@@ -77,7 +77,7 @@ export default function RewardsPage() {
             <button
               type="submit"
               disabled={loading || code.length !== 8}
-              className="mt-2 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-white px-6 font-display text-sm font-bold text-black transition hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-2 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-full bg-white px-6 text-sm font-semibold text-black hover:bg-white/90 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Checking..." : "Check Progress"} <ArrowIcon />
             </button>
@@ -91,14 +91,14 @@ export default function RewardsPage() {
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                 className="overflow-hidden"
               >
-                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+                <div className="rounded-[20px] border border-white/10 bg-white/[0.02] p-5">
                   <div className="flex justify-between items-end mb-4">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-1">Referrals</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-white/40 mb-1">Referrals</p>
                       <p className="font-display text-3xl font-bold">{stats.count} <span className="text-lg text-white/30">/ {stats.target}</span></p>
                     </div>
                     {stats.earned && (
-                      <div className="px-3 py-1 bg-yellow/10 border border-yellow/20 rounded-full text-[10px] font-bold uppercase tracking-wider text-yellow">
+                      <div className="px-3 py-1 bg-accent/10 border border-accent/20 rounded-full text-[11px] font-semibold uppercase tracking-wider text-accent">
                         Reward Earned
                       </div>
                     )}
@@ -110,7 +110,7 @@ export default function RewardsPage() {
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(100, (stats.count / stats.target) * 100)}%` }}
                       transition={{ duration: 1, ease: "easeOut" }}
-                      className="h-full bg-[linear-gradient(90deg,#F9C80E_0%,#FF6A2A_50%,#E91EAE_100%)]"
+                      className="h-full bg-accent rounded-full"
                     />
                   </div>
                   

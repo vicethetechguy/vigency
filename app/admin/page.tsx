@@ -121,9 +121,9 @@ export default function AdminPage() {
           className="w-full max-w-md relative"
         >
           {/* Gradient glow behind card */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-[#f9c80e] via-[#ff6a2a] to-[#e91eae] rounded-2xl blur-xl opacity-20"></div>
+          <div className="absolute -inset-1 bg-accent/40 rounded-[28px] blur-2xl opacity-30"></div>
           
-          <div className="relative bg-[#111111] border border-white/[0.06] rounded-2xl p-8 backdrop-blur-xl shadow-[0_18px_80px_rgba(233,30,174,.1)]">
+          <div className="relative bg-[#111111] border border-white/[0.06] rounded-[20px] p-8 backdrop-blur-xl shadow-soft">
             <div className="flex flex-col items-center mb-8">
               <Logo className="w-40 mb-2" />
               <p className="text-white/50 text-sm mt-1">Sign in to access dashboard</p>
@@ -138,7 +138,7 @@ export default function AdminPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-white/[0.03] border border-white/[0.1] rounded-xl py-3 pl-10 pr-10 text-white placeholder-white/30 focus:outline-none focus:border-[#ff6a2a] focus:ring-1 focus:ring-[#ff6a2a] transition-all"
+                  className="w-full bg-white/[0.03] border border-white/[0.1] rounded-full py-3 pl-10 pr-10 text-sm font-semibold text-white placeholder-white/30 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all"
                   placeholder="Admin Password"
                   required
                 />
@@ -155,7 +155,7 @@ export default function AdminPage() {
                 <motion.p 
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
-                  className="text-[#ff6a2a] text-sm text-center"
+                  className="text-accent text-sm text-center"
                 >
                   {loginError}
                 </motion.p>
@@ -164,7 +164,7 @@ export default function AdminPage() {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className="w-full bg-gradient-to-r from-[#f9c80e] via-[#ff6a2a] to-[#e91eae] text-white rounded-xl py-3 font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex justify-center items-center gap-2"
+                className="w-full bg-white text-black rounded-full py-3 text-sm font-semibold hover:bg-white/90 disabled:opacity-50 flex justify-center items-center gap-2"
               >
                 {isLoggingIn ? (
                   <RefreshCw className="h-5 w-5 animate-spin" />
@@ -218,11 +218,11 @@ export default function AdminPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className="relative rounded-2xl p-[1px] bg-gradient-to-br from-white/[0.1] to-transparent overflow-hidden"
+              className="relative rounded-[20px] p-[1px] bg-gradient-to-br from-white/[0.1] to-transparent overflow-hidden"
             >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#f9c80e]/10 via-[#ff6a2a]/10 to-[#e91eae]/10 blur-2xl rounded-full -mr-16 -mt-16"></div>
-              <div className="bg-[#111111] backdrop-blur-xl rounded-2xl p-5 h-full relative z-10 flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#f9c80e] via-[#ff6a2a] to-[#e91eae] flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(255,106,42,0.2)]">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-accent/10 blur-2xl rounded-full -mr-16 -mt-16"></div>
+              <div className="bg-[#111111] backdrop-blur-xl rounded-[20px] p-5 h-full relative z-10 flex items-center gap-4">
+                <div className="w-12 h-12 rounded-[14px] bg-accent flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(233,30,174,0.25)]">
                   {stat.icon}
                 </div>
                 <div>
@@ -235,7 +235,7 @@ export default function AdminPage() {
         </div>
 
         {/* Payments Table */}
-        <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden shadow-[0_18px_80px_rgba(0,0,0,0.5)]">
+        <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/[0.06] rounded-[20px] overflow-hidden shadow-[0_18px_80px_rgba(0,0,0,0.5)]">
           <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
             <div className="flex items-center gap-3">
               <h2 className="text-xl font-display font-bold text-white">Recent Payments</h2>
@@ -246,7 +246,7 @@ export default function AdminPage() {
             </div>
             <button 
               onClick={fetchData}
-              className="p-2 text-white/50 hover:text-white bg-white/[0.02] hover:bg-white/[0.05] rounded-lg transition-colors border border-white/[0.05]"
+              className="p-2 text-white/50 hover:text-white bg-white/[0.02] hover:bg-white/[0.05] rounded-full transition-colors border border-white/[0.05]"
               title="Refresh"
             >
               <RefreshCw className={`h-4 w-4 ${isLoadingData ? 'animate-spin' : ''}`} />
@@ -287,8 +287,8 @@ export default function AdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${
-                          (p.tier?.toLowerCase() === 'starter') ? 'bg-[#f9c80e]/10 text-[#f9c80e] border-[#f9c80e]/20' :
-                          (p.tier?.toLowerCase() === 'creator') ? 'bg-[#ff6a2a]/10 text-[#ff6a2a] border-[#ff6a2a]/20' :
+                          (p.tier?.toLowerCase() === 'starter') ? 'bg-white/[0.04] text-white/70 border-white/10' :
+                          (p.tier?.toLowerCase() === 'creator') ? 'bg-white/[0.08] text-white border-white/20' :
                           'bg-[#e91eae]/10 text-[#e91eae] border-[#e91eae]/20'
                         }`}>
                           {p.tier || 'Unknown'}
@@ -328,15 +328,15 @@ export default function AdminPage() {
         exit={{ opacity: 0, y: -20 }}
         className="space-y-6"
       >
-        <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden shadow-[0_18px_80px_rgba(0,0,0,0.5)]">
+        <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/[0.06] rounded-[20px] overflow-hidden shadow-[0_18px_80px_rgba(0,0,0,0.5)]">
           <div className="p-6 border-b border-white/[0.06] flex items-center justify-between">
             <h2 className="text-xl font-display font-bold text-white flex items-center gap-2">
-              <Gift className="h-5 w-5 text-[#ff6a2a]" />
+              <Gift className="h-5 w-5 text-accent" />
               Referral Leaderboard
             </h2>
             <button 
               onClick={fetchData}
-              className="p-2 text-white/50 hover:text-white bg-white/[0.02] hover:bg-white/[0.05] rounded-lg transition-colors border border-white/[0.05]"
+              className="p-2 text-white/50 hover:text-white bg-white/[0.02] hover:bg-white/[0.05] rounded-full transition-colors border border-white/[0.05]"
             >
               <RefreshCw className={`h-4 w-4 ${isLoadingData ? 'animate-spin' : ''}`} />
             </button>
@@ -372,7 +372,7 @@ export default function AdminPage() {
                         <td className="px-6 py-4 text-sm text-white/40 font-mono">#{i + 1}</td>
                         <td className="px-6 py-4 text-sm text-white font-medium">{r.whatsapp}</td>
                         <td className="px-6 py-4 text-sm text-white/80">
-                          <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#f9c80e] to-[#ff6a2a]">
+                          <span className="text-lg font-bold text-accent">
                             {count}
                           </span>
                         </td>
@@ -380,7 +380,7 @@ export default function AdminPage() {
                           <div className="flex items-center gap-3">
                             <div className="flex-1 h-2 bg-white/[0.05] rounded-full overflow-hidden">
                               <div 
-                                className="h-full bg-gradient-to-r from-[#f9c80e] via-[#ff6a2a] to-[#e91eae] rounded-full"
+                                className="h-full bg-accent rounded-full"
                                 style={{ width: `${progress}%` }}
                               ></div>
                             </div>
@@ -420,7 +420,7 @@ export default function AdminPage() {
         exit={{ opacity: 0, y: -20 }}
         className="space-y-6 max-w-3xl"
       >
-        <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/[0.06] rounded-2xl overflow-hidden shadow-[0_18px_80px_rgba(0,0,0,0.5)]">
+        <div className="bg-[#111111]/80 backdrop-blur-xl border border-white/[0.06] rounded-[20px] overflow-hidden shadow-[0_18px_80px_rgba(0,0,0,0.5)]">
           <div className="p-6 border-b border-white/[0.06]">
             <h2 className="text-xl font-display font-bold text-white flex items-center gap-2">
               <Settings className="h-5 w-5 text-white/50" />
@@ -452,9 +452,9 @@ export default function AdminPage() {
               <h3 className="text-sm font-medium text-white/50 uppercase tracking-wider mb-4">Tier Configuration</h3>
               <div className="grid gap-3">
                 {[
-                  { name: 'Starter', price: '₦10,000', credits: 50, color: 'from-[#f9c80e]/20 to-transparent', text: 'text-[#f9c80e]' },
-                  { name: 'Creator', price: '₦20,000', credits: 150, color: 'from-[#ff6a2a]/20 to-transparent', text: 'text-[#ff6a2a]' },
-                  { name: 'Studio', price: '₦50,000', credits: 500, color: 'from-[#e91eae]/20 to-transparent', text: 'text-[#e91eae]' },
+                  { name: 'Starter', price: '₦10,000', credits: 50, color: 'from-white/10 to-transparent', text: 'text-white' },
+                  { name: 'Creator', price: '₦20,000', credits: 150, color: 'from-white/10 to-transparent', text: 'text-white' },
+                  { name: 'Studio', price: '₦50,000', credits: 500, color: 'from-[#e91eae]/20 to-transparent', text: 'text-accent' },
                 ].map((tier, i) => (
                   <div key={i} className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-4 flex items-center justify-between relative overflow-hidden">
                     <div className={`absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r ${tier.color} opacity-50 pointer-events-none`}></div>
@@ -471,11 +471,11 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="bg-[#f9c80e]/10 border border-[#f9c80e]/20 rounded-xl p-4 flex items-start gap-3">
-              <Lock className="h-5 w-5 text-[#f9c80e] shrink-0 mt-0.5" />
+            <div className="bg-white/[0.03] border border-white/[0.08] rounded-xl p-4 flex items-start gap-3">
+              <Lock className="h-5 w-5 text-accent shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-[#f9c80e] font-medium text-sm">Read-only Configuration</h4>
-                <p className="text-[#f9c80e]/70 text-sm mt-1">
+                <h4 className="text-white font-semibold text-sm">Read-only Configuration</h4>
+                <p className="text-white/50 text-sm mt-1">
                   To change system settings, update your environment variables in your hosting provider and redeploy the application.
                 </p>
               </div>
@@ -498,7 +498,7 @@ export default function AdminPage() {
           
           <button 
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.05] transition-colors"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold text-white/60 hover:text-white hover:bg-white/[0.05] transition-colors"
           >
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">Sign Out</span>
@@ -518,7 +518,7 @@ export default function AdminPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex items-center gap-2 px-4 py-3 text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`relative flex items-center gap-2 px-4 py-3 text-sm font-semibold transition-colors whitespace-nowrap ${
                 activeTab === tab.id ? 'text-white' : 'text-white/40 hover:text-white/80'
               }`}
             >
@@ -527,7 +527,7 @@ export default function AdminPage() {
               {activeTab === tab.id && (
                 <motion.div 
                   layoutId="activeTab"
-                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#f9c80e] via-[#ff6a2a] to-[#e91eae]"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent"
                 />
               )}
             </button>
