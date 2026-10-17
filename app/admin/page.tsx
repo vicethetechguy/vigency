@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, Users, Settings, LogOut, 
   Eye, EyeOff, Lock, RefreshCw, TrendingUp, 
-  CreditCard, Ticket, Gift, Copy 
+  CreditCard, Ticket, Gift, Copy, CalendarDays 
 } from 'lucide-react';
 import { Logo } from '@/components/ui';
+import { BootcampsAdmin } from '@/components/admin/BootcampsAdmin';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -16,7 +17,7 @@ export default function AdminPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [loginError, setLoginError] = useState('');
 
-  const [activeTab, setActiveTab] = useState('payments');
+  const [activeTab, setActiveTab] = useState('bootcamps');
 
   const [stats, setStats] = useState<any>(null);
   const [payments, setPayments] = useState<any[]>([]);
@@ -82,6 +83,7 @@ export default function AdminPage() {
   };
 
   const fetchData = async () => {
+    if (activeTab === 'bootcamps') return; // the Bootcamps tab loads its own data
     setIsLoadingData(true);
     const headers = { 'x-admin-password': password };
 
@@ -511,6 +513,7 @@ export default function AdminPage() {
         {/* Tabs */}
         <div className="flex space-x-1 border-b border-white/[0.06] mb-8 overflow-x-auto no-scrollbar">
           {[
+            { id: 'bootcamps', label: 'Bootcamps', icon: <CalendarDays className="h-4 w-4" /> },
             { id: 'payments', label: 'Payments', icon: <CreditCard className="h-4 w-4" /> },
             { id: 'referrals', label: 'Referrals', icon: <Users className="h-4 w-4" /> },
             { id: 'settings', label: 'Settings', icon: <Settings className="h-4 w-4" /> }
@@ -536,6 +539,11 @@ export default function AdminPage() {
 
         {/* Tab Content */}
         <AnimatePresence mode="wait">
+          {activeTab === 'bootcamps' && (
+            <motion.div key="bootcamps" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+              <BootcampsAdmin password={password} />
+            </motion.div>
+          )}
           {activeTab === 'payments' && renderPayments()}
           {activeTab === 'referrals' && renderReferrals()}
           {activeTab === 'settings' && renderSettings()}

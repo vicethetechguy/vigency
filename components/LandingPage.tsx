@@ -15,11 +15,14 @@ import {
 } from "lucide-react";
 import { Logo } from "./ui";
 import { ZeroClubSection } from "./ZeroClubSection";
+import { BootcampsSection } from "./BootcampsSection";
+import type { Bootcamp } from "@/lib/bootcamps";
 
 const community = "https://chat.whatsapp.com/FE1MVRwyBZf2zyQucuEkf1";
 const external = { target: "_blank", rel: "noopener noreferrer" } as const;
 
 const navLinks = [
+  ["Bootcamps", "bootcamps"],
   ["Pathways", "pathways"],
   ["How it works", "how-it-works"],
   ["Who it's for", "who"],
@@ -100,7 +103,7 @@ function useScrollReveal() {
   }, []);
 }
 
-export function LandingPage() {
+export function LandingPage({ bootcamps = [] }: { bootcamps?: Bootcamp[] }) {
   useScrollReveal();
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -129,7 +132,7 @@ export function LandingPage() {
             ))}
           </nav>
           <a href={community} {...external} className="btn btn-outline btn-sm header-cta">
-            Join on WhatsApp
+            Join Our Community
           </a>
           <button
             type="button"
@@ -148,7 +151,7 @@ export function LandingPage() {
               <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}</a>
             ))}
             <a href={community} {...external} className="btn btn-primary btn-block" onClick={() => setMenuOpen(false)}>
-              Join on WhatsApp <ArrowUpRight size={18} aria-hidden="true" />
+              Join Our Community <ArrowUpRight size={18} aria-hidden="true" />
             </a>
           </nav>
         </div>
@@ -162,9 +165,9 @@ export function LandingPage() {
             by building real projects, alongside their studies.
           </p>
           <div className="hero-actions">
-            <a href="#pathways" className="btn btn-primary">Explore the pathways</a>
+            <a href="#bootcamps" className="btn btn-primary">See upcoming bootcamps</a>
             <a href={community} {...external} className="btn btn-outline">
-              Join on WhatsApp <ArrowUpRight size={18} aria-hidden="true" />
+              Join Our Community <ArrowUpRight size={18} aria-hidden="true" />
             </a>
           </div>
           <p className="hero-note">No experience needed. Open to every department.</p>
@@ -194,6 +197,8 @@ export function LandingPage() {
           </figure>
         </div>
       </section>
+
+      <BootcampsSection bootcamps={bootcamps} communityUrl={community} />
 
       <section className="wrap statement" data-reveal>
         <h2>Most students graduate with a certificate. Fewer graduate with work to show.</h2>
@@ -308,7 +313,7 @@ export function LandingPage() {
               campuses and departments, share what you&rsquo;re working on, and ask when you&rsquo;re stuck.
             </p>
             <a href={community} {...external} className="btn btn-primary">
-              Join on WhatsApp <ArrowUpRight size={18} aria-hidden="true" />
+              Join Our Community <ArrowUpRight size={18} aria-hidden="true" />
             </a>
           </div>
           <ul className="community-points">
@@ -354,9 +359,9 @@ export function LandingPage() {
           <p>Join the community, tell us what interests you, and we&rsquo;ll help you choose where to begin.</p>
           <div className="closing-actions">
             <a href={community} {...external} className="btn btn-primary">
-              Join on WhatsApp <ArrowUpRight size={18} aria-hidden="true" />
+              Join Our Community <ArrowUpRight size={18} aria-hidden="true" />
             </a>
-            <a href="#pathways" className="btn btn-outline">Explore the pathways</a>
+            <a href="#bootcamps" className="btn btn-outline">See upcoming bootcamps</a>
           </div>
         </div>
       </section>
