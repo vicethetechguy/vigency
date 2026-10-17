@@ -2,69 +2,383 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { ArrowUpRight, ArrowRight, Code2, PenTool, BarChart3, Megaphone, Sparkles, Check, Menu, X, Plus, Minus, GraduationCap, Users, Layers, Globe } from "lucide-react";
+import {
+  ArrowUpRight,
+  BarChart3,
+  Code2,
+  Megaphone,
+  Menu,
+  Minus,
+  PenTool,
+  Plus,
+  X,
+} from "lucide-react";
 import { Logo } from "./ui";
+import { ZeroClubSection } from "./ZeroClubSection";
 
 const community = "https://chat.whatsapp.com/FE1MVRwyBZf2zyQucuEkf1";
-const courses = [
-  { title: "Design & creativity", category: "CREATE SOMETHING THAT MATTERS", description: "Turn your ideas into thoughtful brands, beautiful interfaces, and digital experiences people love.", tags: ["UI/UX design", "Graphic design", "Brand identity"], icon: PenTool, color: "pink", number: "01" },
-  { title: "Web development", category: "BUILD FOR THE REAL WORLD", description: "Go from your first line of code to responsive websites and useful applications you can proudly share.", tags: ["HTML & CSS", "JavaScript", "Web applications"], icon: Code2, color: "yellow", number: "02" },
-  { title: "Data & analytics", category: "FIND THE STORY IN THE NUMBERS", description: "Learn to explore data, uncover insights, and make confident decisions with practical digital tools.", tags: ["Spreadsheets", "Data visualization", "Data analysis"], icon: BarChart3, color: "purple", number: "03" },
-  { title: "Digital marketing & AI", category: "MAKE YOUR IDEAS GO FURTHER", description: "Build a digital presence, create compelling content, and use AI thoughtfully to work more effectively.", tags: ["Content creation", "Digital marketing", "AI productivity"], icon: Megaphone, color: "orange", number: "04" },
+const external = { target: "_blank", rel: "noopener noreferrer" } as const;
+
+const navLinks = [
+  ["Pathways", "pathways"],
+  ["How it works", "how-it-works"],
+  ["Who it's for", "who"],
+  ["FAQs", "faq"],
+] as const;
+
+const pathways = [
+  {
+    title: "Design",
+    icon: PenTool,
+    description: "Design brand identities, posters and app screens that people enjoy using.",
+    skills: "UI/UX design, graphic design, brand identity",
+    project: "A brand identity for a small business on your campus",
+  },
+  {
+    title: "Web development",
+    icon: Code2,
+    description: "Write your first lines of code and build responsive websites you can share with a link.",
+    skills: "HTML and CSS, JavaScript, web applications",
+    project: "Your own portfolio website",
+  },
+  {
+    title: "Data and analytics",
+    icon: BarChart3,
+    description: "Clean up messy data, spot the patterns and present what they mean.",
+    skills: "Spreadsheets, data visualisation, data analysis",
+    project: "A dashboard built from a real public dataset",
+  },
+  {
+    title: "Digital marketing and AI",
+    icon: Megaphone,
+    description: "Grow an audience, plan content and use AI tools to get more done.",
+    skills: "Content creation, digital marketing, AI productivity",
+    project: "A month of content for a brand you admire",
+  },
 ];
+
+const steps = [
+  ["Learn the foundations", "Get comfortable with the tools and the core ideas. You can start from zero."],
+  ["Practise on projects", "Work through exercises and small briefs that look like real work."],
+  ["Build your portfolio", "Share what you make, get feedback and keep adding to it."],
+];
+
+const timetable = [
+  { time: "08:00", what: "GST lecture" },
+  { time: "12:00", what: "Lab practical" },
+  { time: "16:00", what: "Group assignment" },
+  { time: "19:30", what: "Vigency: finish your landing page design", mine: true },
+];
+
 const questions = [
-  ["Do I need any experience to get started?", "You can start from the basics. Our learning pathways are designed to help you build confidence step by step, with practical exercises before more advanced projects."],
-  ["Who is Vigency for?", "Vigency is for college, polytechnic, and university students, as well as graduates and postgraduate learners who want to develop practical digital skills. You can join from any academic discipline."],
-  ["How do I choose the right skill?", "Explore the pathways above, then join our learning community to discuss your interests. If you enjoy visuals, consider design; if you enjoy solving problems, explore development or data; if you love communicating, explore digital marketing."],
-  ["Can I learn alongside my studies?", "Start with a manageable learning routine and build from there. Join the community to ask about upcoming learning opportunities, schedules, and the tools you will need."],
-  ["How do I join, and what does it cost?", "Use the Join the community button to connect with Vigency on WhatsApp. Ask about available programmes, fees, schedules, and entry requirements before enrolling. Programme details will be shared when confirmed."],
+  ["Do I need any experience to start?", "No. The pathways start from the basics and build your confidence with practical exercises before you move on to bigger projects."],
+  ["Who is Vigency for?", "College, polytechnic and university students, graduates and postgraduates who want practical digital skills. You can join from any department."],
+  ["How do I choose a pathway?", "Think about what you already enjoy. If you like visuals, try design. If you like solving problems, try web development or data. If you like talking to people, try digital marketing. You can also ask in the community."],
+  ["Can I learn alongside my studies?", "Yes. Start with a routine you can keep during the semester and build from there. Ask in the community about schedules and the tools you'll need."],
+  ["How do I join, and what does it cost?", "Join the Vigency community on WhatsApp and ask about current programmes, fees, schedules and entry requirements before you enrol. Programme details are shared there once they're confirmed."],
 ];
-/** Fades content in as it scrolls into view. Skipped entirely when the visitor prefers reduced motion. */
+
+/** Gentle fade-in for blocks marked data-reveal. Skipped when reduced motion is on. */
 function useScrollReveal() {
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !("IntersectionObserver" in window)) return;
-    const targets = document.querySelectorAll<HTMLElement>(
-      ".learning-site section > .learn-container > *, .learning-site section.learn-container > *"
-    );
     const observer = new IntersectionObserver(
-      (entries) => entries.forEach((entry) => {
-        if (entry.isIntersecting) {
+      (entries) =>
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
           entry.target.classList.add("is-visible");
           observer.unobserve(entry.target);
-        }
-      }),
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.08 }
+        }),
+      { rootMargin: "0px 0px -10% 0px" }
     );
-    targets.forEach((el) => {
-      if (el.getBoundingClientRect().top < window.innerHeight) return; // already on screen: leave it alone
+    document.querySelectorAll<HTMLElement>("[data-reveal]").forEach((el) => {
+      if (el.getBoundingClientRect().top < window.innerHeight) return;
       el.classList.add("reveal");
       observer.observe(el);
     });
     return () => observer.disconnect();
   }, []);
 }
-function Button({ children, href = "#programmes", secondary = false }: { children: React.ReactNode; href?: string; secondary?: boolean }) {
-  return <a className={`learn-button ${secondary ? "secondary" : ""}`} href={href} {...(href.startsWith("https") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>{children}<ArrowUpRight size={17} /></a>;
-}
+
 export function LandingPage() {
   useScrollReveal();
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
-  const [filter, setFilter] = useState("All skills");
-  const visibleCourses = filter === "All skills" ? courses : courses.filter(c => c.title === filter);
-  return <main className="learning-site" id="top">
-    <div className="announcement"><span className="status-dot" /> YOUR DEGREE IS JUST THE BEGINNING. YOUR SKILLS TAKE YOU FURTHER. <a href="#programmes">Find your path <ArrowRight size={13}/></a></div>
-    <header className="learn-header"><div className="learn-container nav-inner"><a href="#top" aria-label="Vigency home"><Logo /></a><nav aria-label="Main navigation" className={menuOpen ? "nav-links is-open" : "nav-links"}>{[["Our mission", "mission"], ["Explore skills", "programmes"], ["The experience", "experience"], ["FAQs", "faq"]].map(([label, id]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}</a>)}</nav><div className="nav-actions"><a href={community} target="_blank" rel="noopener noreferrer" className="nav-join">Join the community <ArrowUpRight size={15}/></a><button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label={menuOpen ? "Close menu" : "Open menu"} aria-expanded={menuOpen}>{menuOpen ? <X/> : <Menu/>}</button></div></div></header>
-    <section className="learn-hero learn-container"><div className="hero-copy"><p className="eyebrow"><span/> THE NEXT CHAPTER STARTS WITH YOU</p><h1>Your future.<br/>Your skills.<br/><span className="warm-text">Your advantage.</span></h1><p className="hero-description">Big ambitions deserve real-world skills. Discover hands-on digital learning for students and graduates ready to create, build, and stand out.</p><div className="hero-buttons"><Button>Explore digital skills</Button><a className="text-link" href="#experience">See how you’ll learn <ArrowRight size={16}/></a></div><div className="hero-note"><span className="note-icon"><GraduationCap size={21}/></span><p>From your first year to your next chapter.<br/><strong>Every discipline. Every starting point.</strong></p></div></div><div className="hero-visual"><div className="hero-photo"><Image src="/assets/students-campus.jpg" alt="College students collaborating on a laptop in a campus library" fill priority sizes="(max-width: 800px) 100vw, 52vw" className="cover-photo"/><div className="photo-shade"/><div className="photo-caption"><span className="small-label">THE FUTURE IS IN YOUR HANDS</span><p>Learn together.<br/>Go further.</p></div><span className="image-index">01 / THE NEXT GENERATION</span></div><div className="floating-label"><span className="floating-icon"><Sparkles size={22}/></span><div><strong>More than a qualification.</strong><span>Skills you can actually use.</span></div><ArrowUpRight size={21}/></div><div className="hero-spark" aria-hidden="true">✳</div><div className="vertical-note">BUILT FOR YOUR NEXT CHAPTER</div></div></section>
-    <section className="audience-strip"><div className="learn-container"><p>WHEREVER YOU ARE IN YOUR JOURNEY</p><div><span>College students</span><i>✦</i><span>Polytechnic students</span><i>✦</i><span>University students</span><i>✦</i><span>Graduates</span><i>✦</i><span>Postgraduates</span></div></div></section>
-    <section id="mission" className="learn-container mission-section"><div><p className="eyebrow">A DEGREE OPENS DOORS. SKILLS MOVE YOU FORWARD.</p><h2>There’s more to you<br/>than your <span className="muted-text">course of study.</span></h2></div><div className="mission-copy"><p>We believe every student deserves the chance to thrive in a digital world. Vigency bridges the space between what you study and what you can do.</p><p>We help you turn curiosity into practical ability, ideas into projects, and potential into your next opportunity. No matter your department, your digital future belongs to you.</p><a className="text-link" href="#programmes">Find a skill that feels like you <ArrowUpRight size={17}/></a></div></section>
-    <section className="programmes-section" id="programmes"><div className="learn-container"><div className="section-heading"><div><p className="eyebrow">FIND YOUR THING. THEN GET GOOD AT IT.</p><h2>Big possibilities.<br/><span className="warm-text">Practical skills.</span></h2></div><p>Start where your curiosity takes you.<br/>Build skills that travel with you.</p></div><div className="skill-filters" aria-label="Filter skill pathways">{["All skills", ...courses.map(c=>c.title)].map(f=><button key={f} aria-pressed={filter===f} className={filter===f?"active":""} onClick={()=>setFilter(f)}>{f}</button>)}</div><div className="course-grid">{visibleCourses.map(c=><article className={`course-card ${c.color}`} key={c.title}><div className="course-top"><span className="course-icon"><c.icon size={25}/></span><span className="course-number">/{c.number}</span></div><p className="course-category">{c.category}</p><h3>{c.title}</h3><p className="course-description">{c.description}</p><div className="course-tags">{c.tags.map(t=><span key={t}>{t}</span>)}</div><a href={community} target="_blank" rel="noopener noreferrer" className="course-link" aria-label={`Ask about ${c.title}`}>Explore this pathway <ArrowUpRight size={19}/></a></article>)}</div><p className="programme-note"><Sparkles size={14}/> Not sure where to start? <a href={community} target="_blank" rel="noopener noreferrer">Let’s find your path together <ArrowRight size={13}/></a></p></div></section>
-    <section id="experience" className="learn-container experience-section"><div className="experience-image"><Image src="/assets/student-laptop.jpg" alt="Student working through notes and a laptop during a practical study session" fill sizes="(max-width: 800px) 100vw, 45vw" className="cover-photo"/><div className="image-stamp"><Layers size={25}/><span>LESS THEORY ALONE.<br/><strong>More learning by doing.</strong></span></div></div><div className="experience-copy"><p className="eyebrow">THE VIGENCY EXPERIENCE</p><h2>Don’t just learn it.<br/><span className="warm-text">Make it happen.</span></h2><p className="section-description">Build confidence one practical step at a time, with a community that makes the journey feel less like going it alone.</p><div className="learning-steps">{[["01", "Start with the foundations", "Understand the tools and core concepts. Build a strong base, even if you’re completely new."], ["02", "Put your skills to work", "Work through practical exercises and build projects that bring your learning to life."], ["03", "Build your next chapter", "Develop a portfolio, share your work, and keep growing alongside other ambitious learners."]].map(([n,t,d])=><div key={n}><span>{n}</span><div><h3>{t}</h3><p>{d}</p></div></div>)}</div><Button href={community}>Find your learning community</Button></div></section>
-    <section className="journey-section learn-container"><div className="section-heading"><div><p className="eyebrow">YOU BELONG HERE</p><h2>A next step.<br/>At <span className="warm-text">every stage.</span></h2></div><p>You don’t need to have it all figured out.<br/>You just need somewhere to begin.</p></div><div className="journey-grid"><article><div className="journey-photo"><Image src="/assets/student-community.jpg" alt="Students gathered together in a university learning environment" fill sizes="(max-width: 700px) 100vw, 50vw" className="cover-photo"/></div><div className="journey-content"><span className="small-label">COLLEGE · POLYTECHNIC · UNIVERSITY</span><h3>Build skills before you graduate.</h3><p>Make your campus years count. Explore a digital skill, create your first projects, and bring a new perspective to your field of study.</p><a href="#programmes" className="text-link">Find your starting point <ArrowUpRight size={17}/></a></div></article><article><div className="journey-photo"><Image src="/assets/graduates.jpg" alt="University graduates celebrating their graduation together" fill sizes="(max-width: 700px) 100vw, 50vw" className="cover-photo"/></div><div className="journey-content"><span className="small-label">GRADUATES · POSTGRADUATES</span><h3>Your qualification is a beginning.</h3><p>Complement your degree with practical digital skills. Explore a new direction, strengthen your research, or build towards your next career move.</p><a href="#programmes" className="text-link">Take your next step <ArrowUpRight size={17}/></a></div></article></div></section>
-    <section className="community-section"><div className="learn-container community-inner"><span className="community-symbol" aria-hidden="true">✳</span><div><p className="eyebrow">AMBITION LOVES COMPANY</p><h2>Your people.<br/>Your kind of <span className="warm-text">energy.</span></h2><p>Meet other curious minds. Share what you’re building. Ask questions, exchange ideas, and grow in a community of students who want more for their future.</p><Button href={community}>Join the Vigency community</Button></div><div className="community-values">{[[Users,"Find your people","Connect across campuses and disciplines."],[Layers,"Share the process","Learn from ideas, feedback, and each other."],[Globe,"Think beyond campus","Explore what your digital skills can become."]].map(([Icon,t,d])=>{const I=Icon as typeof Users;return <div key={String(t)}><I size={22}/><span><strong>{String(t)}</strong><p>{String(d)}</p></span></div>})}</div></div></section>
-    <section id="faq" className="learn-container faq-section"><div><p className="eyebrow">A LITTLE CLARITY GOES A LONG WAY</p><h2>Good questions.<br/><span className="muted-text">Straight answers.</span></h2><p>Curious about taking the first step?<br/>Here’s a good place to start.</p></div><div className="faq-list">{questions.map(([q,a],i)=><div className="faq-item" key={q}><button onClick={()=>setOpenFaq(openFaq===i?null:i)} aria-expanded={openFaq===i} aria-controls={`answer-${i}`}>{q}{openFaq===i?<Minus size={19}/>:<Plus size={19}/>}</button><div id={`answer-${i}`} hidden={openFaq!==i}><p>{a}</p></div></div>)}</div></section>
-    <section className="final-section learn-container"><p className="eyebrow">YOUR FUTURE IS A WORK IN PROGRESS. START BUILDING.</p><h2>The next big thing<br/>could be <span className="warm-text">you.</span><span className="final-star" aria-hidden="true">✳</span></h2><p>Start with curiosity. Leave with something you can do.</p><Button>Discover your digital skill</Button><div className="final-notes"><span><Check size={14}/> Beginner-friendly pathways</span><span><Check size={14}/> Practical learning</span><span><Check size={14}/> A community to grow with</span></div></section>
-    <footer className="learn-footer"><div className="learn-container"><div className="footer-main"><div><a href="#top" aria-label="Vigency home"><Logo/></a><p>Digital skills. Real possibilities.<br/>Empowering the next generation to build their future.</p></div><div><p className="footer-label">DISCOVER</p><a href="#mission">Our mission</a><a href="#programmes">Digital skills</a><a href="#experience">Learning experience</a></div><div><p className="footer-label">YOUR NEXT STEP</p><a href={community} target="_blank" rel="noopener noreferrer">Join the community <ArrowUpRight size={13}/></a><a href="#faq">FAQs</a><a href="#programmes">Find your pathway</a></div><div className="footer-message">Made for curious minds.<br/><span>Built for what’s next.</span><GraduationCap size={31}/></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} Vigency. All rights reserved.</span><span>FOR STUDENTS. FOR GRADUATES. FOR YOUR FUTURE.</span><a href="#top">Back to top ↑</a></div></div></footer>
-  </main>;
-}
 
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
+
+  return (
+    <main className="site" id="top">
+      <header className={`site-header${menuOpen ? " is-open" : ""}`}>
+        <div className="wrap header-bar">
+          <a href="#top" className="header-logo" aria-label="Vigency home">
+            <Logo />
+          </a>
+          <nav className="header-nav" aria-label="Main">
+            {navLinks.map(([label, id]) => (
+              <a key={id} href={`#${id}`}>{label}</a>
+            ))}
+          </nav>
+          <a href={community} {...external} className="btn btn-outline btn-sm header-cta">
+            Join on WhatsApp
+          </a>
+          <button
+            type="button"
+            className="menu-button"
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+          >
+            {menuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+        <div id="mobile-menu" className="mobile-menu" hidden={!menuOpen}>
+          <nav className="wrap" aria-label="Mobile">
+            {navLinks.map(([label, id]) => (
+              <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}</a>
+            ))}
+            <a href={community} {...external} className="btn btn-primary btn-block" onClick={() => setMenuOpen(false)}>
+              Join on WhatsApp <ArrowUpRight size={18} aria-hidden="true" />
+            </a>
+          </nav>
+        </div>
+      </header>
+
+      <section className="wrap hero">
+        <div className="hero-copy">
+          <h1>Learn the digital skills your course doesn&rsquo;t cover.</h1>
+          <p className="hero-lead">
+            Vigency helps students and graduates learn design, web development, data and digital marketing
+            by building real projects, alongside their studies.
+          </p>
+          <div className="hero-actions">
+            <a href="#pathways" className="btn btn-primary">Explore the pathways</a>
+            <a href={community} {...external} className="btn btn-outline">
+              Join on WhatsApp <ArrowUpRight size={18} aria-hidden="true" />
+            </a>
+          </div>
+          <p className="hero-note">No experience needed. Open to every department.</p>
+        </div>
+
+        <div className="hero-visual">
+          <div className="hero-photo">
+            <Image
+              src="/assets/students-campus.jpg"
+              alt="Students working together on a laptop in a campus library"
+              fill
+              priority
+              sizes="(max-width: 900px) 100vw, 46vw"
+              className="cover"
+            />
+          </div>
+          <figure className="timetable" aria-label="Example of a student's Wednesday with Vigency practice in the evening">
+            <figcaption>Wednesday</figcaption>
+            <ol>
+              {timetable.map((row) => (
+                <li key={row.time} className={row.mine ? "is-mine" : undefined}>
+                  <time>{row.time}</time>
+                  <span>{row.what}</span>
+                </li>
+              ))}
+            </ol>
+          </figure>
+        </div>
+      </section>
+
+      <section className="wrap statement" data-reveal>
+        <h2>Most students graduate with a certificate. Fewer graduate with work to show.</h2>
+        <div className="statement-body">
+          <p>
+            Employers and clients want to see what you can do. Vigency gives you a place to learn practical
+            digital skills during school, and to leave with projects that prove it.
+          </p>
+          <p>Your course of study doesn&rsquo;t limit you. Whether you&rsquo;re in medicine, law, engineering or accounting, a digital skill will make you better at it.</p>
+        </div>
+      </section>
+
+      <section className="section pathways" id="pathways">
+        <div className="wrap">
+          <div className="section-head">
+            <h2>Choose a pathway</h2>
+            <p>Four places to start. Pick the one closest to what you already enjoy. You can add another later.</p>
+          </div>
+          <ul className="pathway-list" data-reveal>
+            {pathways.map((p) => (
+              <li key={p.title} className="pathway">
+                <span className="icon-tile" aria-hidden="true"><p.icon size={22} /></span>
+                <div className="pathway-main">
+                  <h3>{p.title}</h3>
+                  <p>{p.description}</p>
+                </div>
+                <dl className="pathway-meta">
+                  <div>
+                    <dt>You&rsquo;ll learn</dt>
+                    <dd>{p.skills}</dd>
+                  </div>
+                  <div>
+                    <dt>Example project</dt>
+                    <dd>{p.project}</dd>
+                  </div>
+                </dl>
+                <a href={community} {...external} className="pathway-link" aria-label={`Ask about ${p.title} on WhatsApp`}>
+                  Ask about this pathway <ArrowUpRight size={16} aria-hidden="true" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="section wrap how" id="how-it-works">
+        <div className="how-photo" data-reveal>
+          <Image
+            src="/assets/student-laptop.jpg"
+            alt="A student taking notes beside a laptop"
+            fill
+            sizes="(max-width: 900px) 100vw, 44vw"
+            className="cover"
+          />
+        </div>
+        <div className="how-copy" data-reveal>
+          <h2>How you&rsquo;ll learn</h2>
+          <p className="section-lead">Less time on theory alone, more time making things. Each step builds on the last.</p>
+          <ol className="steps">
+            {steps.map(([title, text], i) => (
+              <li key={title}>
+                <span className="step-num" aria-hidden="true">{i + 1}</span>
+                <div>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      <ZeroClubSection />
+
+      <section className="section wrap who" id="who">
+        <div className="section-head">
+          <h2>Wherever you are in school</h2>
+          <p>You don&rsquo;t need it all figured out. You just need somewhere to begin.</p>
+        </div>
+        <div className="who-grid" data-reveal>
+          <article className="who-card">
+            <div className="who-photo">
+              <Image src="/assets/student-community.jpg" alt="Students together in a university classroom" fill sizes="(max-width: 760px) 100vw, 50vw" className="cover" />
+            </div>
+            <div className="who-body">
+              <p className="who-for">College, polytechnic and university students</p>
+              <h3>Start before you graduate</h3>
+              <p>Use your years on campus to learn a skill properly, and finish your programme with projects you can show.</p>
+              <a href="#pathways" className="text-link">See the pathways</a>
+            </div>
+          </article>
+          <article className="who-card">
+            <div className="who-photo">
+              <Image src="/assets/graduates.jpg" alt="Graduates celebrating together" fill sizes="(max-width: 760px) 100vw, 50vw" className="cover" />
+            </div>
+            <div className="who-body">
+              <p className="who-for">Graduates and postgraduates</p>
+              <h3>Add skills to your degree</h3>
+              <p>Change direction, strengthen your research or get ready for your next job with practical digital skills.</p>
+              <a href="#pathways" className="text-link">See the pathways</a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section className="section community">
+        <div className="wrap community-inner" data-reveal>
+          <div>
+            <h2>You won&rsquo;t be learning alone</h2>
+            <p className="section-lead">
+              The Vigency community lives on WhatsApp, where you probably already are. Meet students from other
+              campuses and departments, share what you&rsquo;re working on, and ask when you&rsquo;re stuck.
+            </p>
+            <a href={community} {...external} className="btn btn-primary">
+              Join on WhatsApp <ArrowUpRight size={18} aria-hidden="true" />
+            </a>
+          </div>
+          <ul className="community-points">
+            <li><strong>Students like you</strong><span>From different campuses, departments and levels.</span></li>
+            <li><strong>Feedback on your work</strong><span>Post a project and hear what others think.</span></li>
+            <li><strong>Answers when you&rsquo;re stuck</strong><span>Someone has usually hit the same problem before.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section className="section wrap faq" id="faq">
+        <div className="faq-intro">
+          <h2>Questions students ask</h2>
+          <p className="section-lead">
+            Can&rsquo;t find yours? <a href={community} {...external} className="inline-link">Ask us on WhatsApp</a>.
+          </p>
+        </div>
+        <div className="faq-list" data-reveal>
+          {questions.map(([q, a], i) => (
+            <div className="faq-item" key={q}>
+              <h3>
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  aria-expanded={openFaq === i}
+                  aria-controls={`answer-${i}`}
+                >
+                  <span>{q}</span>
+                  {openFaq === i ? <Minus size={18} aria-hidden="true" /> : <Plus size={18} aria-hidden="true" />}
+                </button>
+              </h3>
+              <div id={`answer-${i}`} hidden={openFaq !== i}>
+                <p>{a}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="wrap closing" data-reveal>
+        <div className="closing-card">
+          <h2>Start with one skill</h2>
+          <p>Join the community, tell us what interests you, and we&rsquo;ll help you choose where to begin.</p>
+          <div className="closing-actions">
+            <a href={community} {...external} className="btn btn-primary">
+              Join on WhatsApp <ArrowUpRight size={18} aria-hidden="true" />
+            </a>
+            <a href="#pathways" className="btn btn-outline">Explore the pathways</a>
+          </div>
+        </div>
+      </section>
+
+      <footer className="site-footer">
+        <div className="wrap footer-inner">
+          <div className="footer-brand">
+            <Logo />
+            <p>Practical digital skills for students and graduates.</p>
+          </div>
+          <nav className="footer-links" aria-label="Footer">
+            {navLinks.map(([label, id]) => (
+              <a key={id} href={`#${id}`}>{label}</a>
+            ))}
+            <a href={community} {...external}>WhatsApp community</a>
+          </nav>
+        </div>
+        <div className="wrap footer-base">
+          <span>&copy; {new Date().getFullYear()} Vigency</span>
+          <a href="#top">Back to top</a>
+        </div>
+      </footer>
+    </main>
+  );
+}

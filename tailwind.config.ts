@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 
 /*
  * Vigency brand tokens.
- * Mostly black and white, with one magenta accent.
+ * Original yellow, orange, pink and purple palette on dark surfaces.
  * Fonts read from CSS variables set in app/globals.css (see app/layout.tsx).
  */
 export default {
@@ -18,6 +18,9 @@ export default {
         line: "rgba(255,255,255,0.08)",
         accent: "#E91EAE",
         pink: "#E91EAE",
+        yellow: "#F9C80E",
+        orange: "#FF6A2A",
+        purple: "#B05CFF",
       },
       fontFamily: {
         sans: ["var(--font-body)"],
