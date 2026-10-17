@@ -15,14 +15,14 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "Vigency — Buy Spyda Credits | Fund Your AI Wallet",
+  title: "Vigency — Digital Skills for Students & Graduates",
   description:
-    "Buy Spyda Credits instantly. Pick your tier, pay securely, and receive a single-use coupon code to fund your Spyda Wallet for AI-powered generations.",
+    "Discover practical digital skills with Vigency. Explore design, web development, data, marketing, and AI learning pathways for college, polytechnic, university students, graduates, and postgraduates.",
   metadataBase: new URL("https://vigency.co"),
   openGraph: {
-    title: "Buy Spyda Credits — Fund Your AI Wallet",
-    description: "Pick your tier. Pay securely. Get a single-use Spyda coupon code. Power your AI generations.",
-    images: ["/assets/design-collage.png"],
+    title: "Vigency — Your Future. Your Skills. Your Advantage.",
+    description: "Build practical digital skills, create real projects, and grow with a community of ambitious students and graduates.",
+    images: ["/assets/students-campus.jpg"],
   },
 };
 
@@ -41,3 +41,4 @@ export default function RootLayout({
     </html>
   );
 }
+
